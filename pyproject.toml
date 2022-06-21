@@ -2,9 +2,10 @@
 name = "django-azure-auth"
 version = "0.1.0"
 description = "A simple Django app for user authentication with Azure Active Directory."
-authors = ["Armand Rego <armand@agiletek.co.uk>"]
-license = "Apache-2.0"
+authors = ["AgileTek Engineering <london@agiletek.co.uk>"]
+license = "MIT"
 readme = "README.md"
+homepage = "https://github.com/AgileTek/django-azure-auth"
 keywords = []
 classifiers = [
     "Private :: Do Not Upload",
