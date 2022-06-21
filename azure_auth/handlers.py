@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 UserModel = get_user_model()
 
 
-class MSALClient:
+class AuthHandler:
     # TODO: Docs
     def __init__(self, request=None):
         self.request = request
@@ -15,18 +15,26 @@ class MSALClient:
         self._cache = None
         self._msal_app = None
 
-    def get_flow(self):
+    def get_auth_uri(self):
         # TODO: Handle possible error
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
         )
         self.request.session[self.auth_flow_session_key] = flow
-        return flow
+        return flow["auth_uri"]
 
-    def authenticate(self):
-        token_result = self._get_token_from_flow()
-        azure_user = self._get_azure_user(token_result["access_token"])
+    def get_token_from_flow(self):
+        flow = self.request.session.pop(self.auth_flow_session_key, {})
+        # TODO: Handle possible error
+        token_result = self.msal_app.acquire_token_by_auth_code_flow(
+            flow, self.request.GET
+        )
+        self._save_cache()
+        return token_result
+
+    def authenticate(self, token: dict) -> UserModel:
+        azure_user = self._get_azure_user(token["access_token"])
         email = azure_user["mail"]
 
         # Using `UserModel._default_manager.get_by_natural_key` handles custom
@@ -41,13 +49,11 @@ class MSALClient:
         # TODO: Handle groups
         return user
 
-    @property
-    def logout_url(self):
+    @staticmethod
+    def get_logout_url():
         authority = settings.AZURE_AUTH["AUTHORITY"]
         logout_uri = settings.AZURE_AUTH["LOGOUT_URI"]
-        return (
-            f"{authority}/oauth2/v2.0/logout" f"?post_logout_redirect_uri={logout_uri}"
-        )
+        return f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
 
     @property
     def msal_app(self):
@@ -72,16 +78,7 @@ class MSALClient:
         if self.cache.has_state_changed:
             self.request.session["token_cache"] = self.cache.serialize()
 
-    def _get_token_from_flow(self):
-        flow = self.request.session.pop(self.auth_flow_session_key, {})
-        # TODO: Handle possible error
-        token_result = self.msal_app.acquire_token_by_auth_code_flow(
-            flow, self.request.GET
-        )
-        self._save_cache()
-        return token_result
-
-    def _get_azure_user(self, token):
+    def _get_azure_user(self, token: dict):
         resp = requests.get(
             self.graph_user_endpoint, headers={"Authorization": f"Bearer {token}"}
         )
