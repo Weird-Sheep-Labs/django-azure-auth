@@ -1,0 +1,28 @@
+[tool.poetry]
+name = "django-azure-auth"
+version = "0.1.0"
+description = "A simple Django app for user authentication with Azure Active Directory."
+authors = ["Armand Rego <armand@agiletek.co.uk>"]
+license = "Apache-2.0"
+readme = "README.md"
+keywords = []
+classifiers = [
+    "Private :: Do Not Upload",
+    "Framework :: Django",
+]
+packages = [
+    { include = "azure_auth"},
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+msal = "^1.18.0"
+Django = ">=3.2"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+pre-commit = "^2.19.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
