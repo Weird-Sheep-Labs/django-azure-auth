@@ -24,7 +24,7 @@ jobs:
       - name: Run tests
         run: |
           poetry run pytest
-  deploy:
+  production-deploy:
     runs-on: ubuntu-latest
     environment: production
     needs: default
@@ -39,3 +39,27 @@ jobs:
         run: |
           . install_poetry.sh
           poetry publish --build -u ${{ secrets.PYPI_USERNAME}} -p ${{ secrets.PYPI_PASSWORD }}
+      - name: Git tag
+        run: |
+          export VERSION=$(poetry version -s)
+          git tag -a $VERSION -m "$VERSION release"
+          git push origin --tags
+  staging-deploy:
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: default
+    if: startsWith(github.ref, 'refs/heads/release')
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.8'
+      - name: Deploy to PyPi
+        run: |
+          . install_poetry.sh
+          poetry config repositories.ael_pypi "$AEL_PYPI_REPOSITORY_URL"
+          poetry version prerelease
+          poetry publish --build --repository ael_pypi -u ${{ secrets.AEL_PYPI_USERNAME}} -p ${{ secrets.AEL_PYPI_PASSWORD }}
+          git commit -a -m "Prerelease bumped version [skip ci]"
+          git push
