@@ -26,6 +26,7 @@ jobs:
           poetry run pytest
   deploy:
     runs-on: ubuntu-latest
+    environment: production
     needs: default
     if: github.ref == 'refs/heads/main'
     steps:
