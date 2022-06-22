@@ -11,7 +11,7 @@ def azure_auth_login(request):
 
 def azure_auth_logout(request):
     logout(request)
-    return HttpResponseRedirect(AuthHandler.get_logout_url())
+    return HttpResponseRedirect(AuthHandler.get_logout_uri())
 
 
 def azure_auth_callback(request):

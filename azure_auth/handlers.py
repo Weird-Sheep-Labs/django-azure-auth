@@ -1,22 +1,38 @@
+from http import HTTPStatus
+
 import msal
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
+from azure_auth.exceptions import DjangoAzureAuthException, TokenError
+
 UserModel = get_user_model()
 
 
 class AuthHandler:
-    # TODO: Docs
+    """
+    Class to interface with `msal` package and execute authentication process.
+    """
+
     def __init__(self, request=None):
+        """
+
+        :param request: HttpRequest
+        """
         self.request = request
         self.graph_user_endpoint = "https://graph.microsoft.com/v1.0/me"
         self.auth_flow_session_key = "auth_flow"
         self._cache = None
         self._msal_app = None
 
-    def get_auth_uri(self):
-        # TODO: Handle possible error
+    def get_auth_uri(self) -> str:
+        """
+        Requests the auth flow dictionary and stores it on the session to be
+        queried later in the auth process.
+
+        :return: Authentication redirect URI
+        """
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
@@ -24,16 +40,31 @@ class AuthHandler:
         self.request.session[self.auth_flow_session_key] = flow
         return flow["auth_uri"]
 
-    def get_token_from_flow(self):
+    def get_token_from_flow(self) -> dict:
+        """
+        Acquires the token from the auth flow on the session and the content of
+        the redirect request from Active Directory.
+
+        :return: Token result containing `access_token`/`id_token` and other
+        claims, depending on scopes used
+        """
         flow = self.request.session.pop(self.auth_flow_session_key, {})
-        # TODO: Handle possible error
         token_result = self.msal_app.acquire_token_by_auth_code_flow(
             flow, self.request.GET
         )
+        if "error" in token_result:
+            raise TokenError(token_result["error"], token_result["error_description"])
         self._save_cache()
         return token_result
 
     def authenticate(self, token: dict) -> UserModel:
+        """
+        Helper method to authenticate the user. Gets the Azure user from the
+        Microsoft Graph endpoint and gets/creates the associated Django user.
+
+        :param token: MSAL auth token dictionary
+        :return: Django user instance
+        """
         azure_user = self._get_azure_user(token["access_token"])
         email = azure_user["mail"]
 
@@ -50,7 +81,13 @@ class AuthHandler:
         return user
 
     @staticmethod
-    def get_logout_url():
+    def get_logout_uri() -> str:
+        """
+        Forms the URI to log the user out in the Active Directory app and
+        redirect to the webapp logout page.
+
+        :return: Active Directory app logout URI
+        """
         authority = settings.AZURE_AUTH["AUTHORITY"]
         logout_uri = settings.AZURE_AUTH["LOGOUT_URI"]
         return f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
@@ -82,6 +119,10 @@ class AuthHandler:
         resp = requests.get(
             self.graph_user_endpoint, headers={"Authorization": f"Bearer {token}"}
         )
-        # TODO: Handle bad response
         if resp.ok:
             return resp.json()
+        elif resp.status_code == HTTPStatus.UNAUTHORIZED:
+            error = resp.json()["error"]
+            raise TokenError(message=error["code"], description=error["message"])
+        else:
+            raise DjangoAzureAuthException("An unknown error occurred.")
