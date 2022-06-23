@@ -129,10 +129,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AZURE_AUTH = {
     "CLIENT_ID": "dummy_client_id",
     "CLIENT_SECRET": "dummy_client_secret",
-    "REDIRECT_URI": "http://localhost:8000/azure_auth/callback",
+    "REDIRECT_URI": "http://mydomain/azure_auth/callback",
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/dummy_tenant_id",
-    "LOGOUT_URI": "http://localhost:8000/logout",
+    "LOGOUT_URI": "http://mydomain/logout",
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"

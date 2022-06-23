@@ -1,8 +1,9 @@
 from http import HTTPStatus
-from unittest.mock import call, patch
+from unittest.mock import patch
 
 import msal
 import pytest
+from django.conf import settings
 from django.test import TestCase
 from django.urls import reverse
 
@@ -19,28 +20,21 @@ class TestLoginView(TestCase):
         )
         resp = self.client.get(reverse("login"))
         assert resp.status_code == HTTPStatus.FOUND
-        assert resp.url == "https://aad-auth-uri.com"
-        assert self.client.session._session == {
-            "auth_flow": {
-                "state": "dummy_state",
-                "redirect_uri": "http://localhost:8000/azure_auth/callback",
-                "scope": ["profile", "offline_access", "User.Read", "openid"],
-                "auth_uri": "https://aad-auth-uri.com",
-            }
-        }
+        assert resp.url == self.auth_flow["auth_uri"]
+        assert self.client.session._session == {"auth_flow": self.auth_flow}
 
         # MSAL calls
         mocked_msal_app.assert_called_once_with(
-            client_id="dummy_client_id",
-            client_credential="dummy_client_secret",
-            authority="https://login.microsoftonline.com/dummy_tenant_id",
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
             # Don't care about the `token_cache` object so just pipe it in
             token_cache=mocked_msal_app.call_args.kwargs["token_cache"],
         )
 
         mocked_msal_app.return_value.initiate_auth_code_flow.assert_called_once_with(
-            scopes=["User.Read"],
-            redirect_uri="http://localhost:8000/azure_auth/callback",
+            scopes=settings.AZURE_AUTH["SCOPES"],
+            redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
         )
 
 
@@ -89,13 +83,13 @@ class TestCallbackView(TestCase):
         ]
         resp = self.client.get(reverse("callback"))
         assert resp.status_code == HTTPStatus.FOUND
-        assert resp.url == "/"
+        assert resp.url == settings.LOGIN_REDIRECT_URL
 
         # MSAL calls
         mocked_msal_app.assert_called_once_with(
-            client_id="dummy_client_id",
-            client_credential="dummy_client_secret",
-            authority="https://login.microsoftonline.com/dummy_tenant_id",
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
             # Don't care about the `token_cache` object so just pipe it in
             token_cache=mocked_msal_app.call_args.kwargs["token_cache"],
         )
@@ -110,7 +104,7 @@ class TestCallbackView(TestCase):
         # Graph API calls
         mocked_requests.get.assert_called_once_with(
             "https://graph.microsoft.com/v1.0/me",
-            headers={"Authorization": "Bearer dummy_access_token"},
+            headers={"Authorization": f"Bearer {self.token['access_token']}"},
         )
 
 
