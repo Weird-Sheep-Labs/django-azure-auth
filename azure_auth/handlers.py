@@ -33,6 +33,7 @@ class AuthHandler:
 
         :return: Authentication redirect URI
         """
+        # TODO: Handle if user has put incorrect details in settings
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
@@ -50,7 +51,7 @@ class AuthHandler:
         """
         flow = self.request.session.pop(self.auth_flow_session_key, {})
         token_result = self.msal_app.acquire_token_by_auth_code_flow(
-            flow, self.request.GET
+            auth_code_flow=flow, auth_response=self.request.GET
         )
         if "error" in token_result:
             raise TokenError(token_result["error"], token_result["error_description"])
@@ -73,6 +74,7 @@ class AuthHandler:
         try:
             user = UserModel._default_manager.get_by_natural_key(email)
         except UserModel.DoesNotExist:
+            # TODO: Include user first and last names when creating
             user = UserModel._default_manager.create_user(username=email, email=email)
             user.is_staff = True
             user.save()
@@ -96,9 +98,9 @@ class AuthHandler:
     def msal_app(self):
         if self._msal_app is None:
             self._msal_app = msal.ConfidentialClientApplication(
-                settings.AZURE_AUTH["CLIENT_ID"],
-                authority=settings.AZURE_AUTH["AUTHORITY"],
+                client_id=settings.AZURE_AUTH["CLIENT_ID"],
                 client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+                authority=settings.AZURE_AUTH["AUTHORITY"],
                 token_cache=self.cache,
             )
         return self._msal_app

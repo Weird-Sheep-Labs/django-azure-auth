@@ -15,8 +15,7 @@ def azure_auth_logout(request):
 
 
 def azure_auth_callback(request):
-    auth_handler = AuthHandler(request)
-    token = auth_handler.get_token_from_flow()
+    token = AuthHandler(request).get_token_from_flow()
     user = authenticate(request, token=token)
     if user:
         login(request, user)
