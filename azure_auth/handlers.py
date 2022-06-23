@@ -74,9 +74,9 @@ class AuthHandler:
         try:
             user = UserModel._default_manager.get_by_natural_key(email)
         except UserModel.DoesNotExist:
-            # TODO: Include user first and last names when creating
             user = UserModel._default_manager.create_user(username=email, email=email)
-            user.is_staff = True
+            user.first_name = attr if (attr := azure_user["givenName"]) else ""
+            user.last_name = attr if (attr := azure_user["surname"]) else ""
             user.save()
 
         # TODO: Handle groups

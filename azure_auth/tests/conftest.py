@@ -5,11 +5,6 @@ from mixer.backend.django import mixer
 UserModel = get_user_model()
 
 
-@pytest.fixture(autouse=True)
-def enable_db_access_for_all_tests(db):
-    pass
-
-
 @pytest.fixture(scope="function", autouse=True)
 def user(request):
     _user = mixer.blend(UserModel)
