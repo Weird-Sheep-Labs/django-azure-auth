@@ -126,5 +126,5 @@ class AuthHandler:
         elif resp.status_code == HTTPStatus.UNAUTHORIZED:
             error = resp.json()["error"]
             raise TokenError(message=error["code"], description=error["message"])
-        else:
+        else:  # pragma: no cover
             raise DjangoAzureAuthException("An unknown error occurred.")

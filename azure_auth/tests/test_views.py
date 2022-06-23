@@ -59,7 +59,7 @@ class TestCallbackView(TransactionTestCase):
         session["auth_flow"] = self.auth_flow
         session.save()
 
-    def mocked_response(self, code, json):
+    def _mocked_response(self, code, json):
         class MockResponse:
             def __init__(self, status_code, data):
                 self.status_code = status_code
@@ -72,14 +72,14 @@ class TestCallbackView(TransactionTestCase):
         return MockResponse(code, json)
 
     @staticmethod
-    def get_graph_response(user):
+    def _get_graph_response(user):
         return {
             "givenName": user.first_name,
             "mail": user.email,
             "surname": user.last_name,
         }
 
-    def azure_asserts(self, mocked_msal_app, mocked_requests):
+    def _msal_asserts(self, mocked_msal_app):
         # MSAL calls
         mocked_msal_app.assert_called_once_with(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
@@ -96,6 +96,7 @@ class TestCallbackView(TransactionTestCase):
             auth_response=m_acf.call_args.kwargs["auth_response"],
         )
 
+    def _graph_asserts(self, mocked_requests):
         # Graph API calls
         mocked_requests.get.assert_called_once_with(
             "https://graph.microsoft.com/v1.0/me",
@@ -108,15 +109,16 @@ class TestCallbackView(TransactionTestCase):
         )
 
         # Graph API response
-        expected_response_json = self.get_graph_response(self.user)
+        expected_response_json = self._get_graph_response(self.user)
         mocked_requests.get.side_effect = [
-            self.mocked_response(HTTPStatus.OK, expected_response_json)
+            self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
         resp = self.client.get(reverse("callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
 
-        self.azure_asserts(mocked_msal_app, mocked_requests)
+        self._msal_asserts(mocked_msal_app)
+        self._graph_asserts(mocked_requests)
 
     def test_callback_new_user(self, mocked_msal_app, mocked_requests):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
@@ -129,21 +131,34 @@ class TestCallbackView(TransactionTestCase):
         assert len(UserModel.objects.all()) == 1
 
         # Graph API response
-        expected_response_json = self.get_graph_response(new_user)
+        expected_response_json = self._get_graph_response(new_user)
         mocked_requests.get.side_effect = [
-            self.mocked_response(HTTPStatus.OK, expected_response_json)
+            self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
         resp = self.client.get(reverse("callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
 
-        self.azure_asserts(mocked_msal_app, mocked_requests)
+        self._msal_asserts(mocked_msal_app)
+        self._graph_asserts(mocked_requests)
 
         # User creation checks
         created_user = UserModel.objects.get(email=new_user.email)
         assert created_user.username == new_user.email
         assert created_user.first_name == new_user.first_name
         assert created_user.last_name == new_user.last_name
+
+    def test_callback_acquire_token_error(self, mocked_msal_app, mocked_requests):
+        mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = {
+            "error": "dummy_error",
+            "error_description": "dummy_error_description",
+        }
+
+        with pytest.raises(TokenError) as exc:
+            self.client.get(reverse("callback"))
+        assert str(exc.value) == "dummy_error\ndummy_error_description"
+
+        self._msal_asserts(mocked_msal_app)
 
     def test_callback_unauthorized(self, mocked_msal_app, mocked_requests):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
@@ -152,7 +167,7 @@ class TestCallbackView(TransactionTestCase):
 
         # Graph API response
         mocked_requests.get.side_effect = [
-            self.mocked_response(
+            self._mocked_response(
                 HTTPStatus.UNAUTHORIZED,
                 {"error": {"code": "dummy_error", "message": "dummy_message"}},
             )
@@ -162,13 +177,46 @@ class TestCallbackView(TransactionTestCase):
             self.client.get(reverse("callback"))
         assert str(exc.value) == "dummy_error\ndummy_message"
 
-        self.azure_asserts(mocked_msal_app, mocked_requests)
+        self._msal_asserts(mocked_msal_app)
+        self._graph_asserts(mocked_requests)
+
+    def test_callback_inactive_user(self, mocked_msal_app, mocked_requests):
+        mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
+            self.token
+        )
+
+        # Graph API response
+        expected_response_json = self._get_graph_response(self.user)
+        mocked_requests.get.side_effect = [
+            self._mocked_response(HTTPStatus.OK, expected_response_json)
+        ]
+
+        # Make user inactive
+        self.user.is_active = False
+        self.user.save()
+        resp = self.client.get(reverse("callback"))
+        assert resp.status_code == HTTPStatus.FORBIDDEN
+        assert resp.content.decode() == "Invalid email for this app."
 
 
 @patch.object(msal, "ConfidentialClientApplication")
 class TestLogoutView(TestCase):
     def setUp(self):
         super().setUp()
+        self.client.force_login(self.user)
 
-    def test_logout(self, mocked_msal_app):
-        pass
+    def test_logout(self, *args):
+        # Check user has been correctly logged in
+        assert all(
+            [
+                key in self.client.session
+                for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
+            ]
+        )
+        resp = self.client.get(reverse("logout"))
+        assert resp.status_code == HTTPStatus.FOUND
+        assert (
+            resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"
+            f"?post_logout_redirect_uri={settings.AZURE_AUTH['LOGOUT_URI']}"
+        )
+        assert not self.client.session.keys()
