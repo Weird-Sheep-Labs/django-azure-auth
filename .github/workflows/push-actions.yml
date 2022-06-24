@@ -35,6 +35,10 @@ jobs:
         uses: actions/setup-python@v3
         with:
           python-version: '3.8'
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
       - name: Deploy to PyPi
         run: |
           . install_poetry.sh
@@ -57,8 +61,8 @@ jobs:
           python-version: '3.8'
       - name: Configure Git
         run: |
-          git config --global user.email "london@agiletek.co.uk"
-          git config --global user.name "AgileTek Admin"
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
       - name: Deploy to PyPi
         run: |
           . install_poetry.sh
