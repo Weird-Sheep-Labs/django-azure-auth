@@ -23,7 +23,7 @@ class AuthHandler:
         self.request = request
         self.graph_user_endpoint = "https://graph.microsoft.com/v1.0/me"
         self.auth_flow_session_key = "auth_flow"
-        self._cache = None
+        self._cache = msal.SerializableTokenCache()
         self._msal_app = None
 
     def get_auth_uri(self) -> str:
@@ -57,6 +57,16 @@ class AuthHandler:
             raise TokenError(token_result["error"], token_result["error_description"])
         self._save_cache()
         return token_result
+
+    def get_token_from_cache(self):
+        accounts = self.msal_app.get_accounts()
+        if accounts:
+            # Will return `None` if CCA cannot retrieve or generate new token
+            token_result = self.msal_app.acquire_token_silent(
+                scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0]
+            )
+            self._save_cache()
+            return token_result
 
     def authenticate(self, token: dict) -> UserModel:
         """
@@ -107,17 +117,15 @@ class AuthHandler:
 
     @property
     def cache(self):
-        _cache = msal.SerializableTokenCache()
         if self.request.session.get("token_cache"):
-            _cache.deserialize(self.request.session["token_cache"])
-        self._cache = _cache
+            self._cache.deserialize(self.request.session["token_cache"])
         return self._cache
 
     def _save_cache(self):
         if self.cache.has_state_changed:
             self.request.session["token_cache"] = self.cache.serialize()
 
-    def _get_azure_user(self, token: dict):
+    def _get_azure_user(self, token: str):
         resp = requests.get(
             self.graph_user_endpoint, headers={"Authorization": f"Bearer {token}"}
         )

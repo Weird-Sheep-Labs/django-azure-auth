@@ -53,7 +53,7 @@ MIDDLEWARE = [
 
 AUTHENTICATION_BACKENDS = ("azure_auth.backends.AzureBackend",)
 
-ROOT_URLCONF = "azure_auth.urls"
+ROOT_URLCONF = "azure_auth.tests.urls"
 
 TEMPLATES = [
     {

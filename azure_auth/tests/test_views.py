@@ -10,6 +10,7 @@ from django.urls import reverse
 from mixer.backend.django import Mixer
 
 from azure_auth.exceptions import TokenError
+from azure_auth.handlers import AuthHandler
 
 UserModel = get_user_model()
 
@@ -25,7 +26,7 @@ class TestLoginView(TestCase):
         mocked_msal_app.return_value.initiate_auth_code_flow.return_value = (
             self.auth_flow
         )
-        resp = self.client.get(reverse("login"))
+        resp = self.client.get(reverse("azure_auth:login"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == self.auth_flow["auth_uri"]
         assert self.client.session._session == {"auth_flow": self.auth_flow}
@@ -48,6 +49,7 @@ class TestLoginView(TestCase):
 @pytest.mark.django_db
 @pytest.mark.usefixtures("token")
 @pytest.mark.usefixtures("auth_flow")
+@patch.object(AuthHandler, "cache")
 @patch("azure_auth.handlers.requests")
 @patch.object(msal, "ConfidentialClientApplication")
 class TestCallbackView(TransactionTestCase):
@@ -103,27 +105,35 @@ class TestCallbackView(TransactionTestCase):
             headers={"Authorization": f"Bearer {self.token['access_token']}"},
         )
 
-    def test_callback_existing_user(self, mocked_msal_app, mocked_requests):
+    def test_callback_existing_user(
+        self, mocked_msal_app, mocked_requests, mocked_cache
+    ):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
             self.token
         )
+        mocked_cache.has_state_changed = True
+        mocked_cache.serialize = msal.SerializableTokenCache().serialize
+        mocked_cache.deserialize = msal.SerializableTokenCache().deserialize
 
         # Graph API response
         expected_response_json = self._get_graph_response(self.user)
         mocked_requests.get.side_effect = [
             self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
-        resp = self.client.get(reverse("callback"))
+        resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
 
         self._msal_asserts(mocked_msal_app)
         self._graph_asserts(mocked_requests)
 
-    def test_callback_new_user(self, mocked_msal_app, mocked_requests):
+    def test_callback_new_user(self, mocked_msal_app, mocked_requests, mocked_cache):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
             self.token
         )
+        mocked_cache.has_state_changed = True
+        mocked_cache.serialize = msal.SerializableTokenCache().serialize
+        mocked_cache.deserialize = msal.SerializableTokenCache().deserialize
 
         # Generate unsaved new user instance
         custom_mixer = Mixer(commit=False)
@@ -135,7 +145,7 @@ class TestCallbackView(TransactionTestCase):
         mocked_requests.get.side_effect = [
             self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
-        resp = self.client.get(reverse("callback"))
+        resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
 
@@ -148,22 +158,27 @@ class TestCallbackView(TransactionTestCase):
         assert created_user.first_name == new_user.first_name
         assert created_user.last_name == new_user.last_name
 
-    def test_callback_acquire_token_error(self, mocked_msal_app, mocked_requests):
+    def test_callback_acquire_token_error(self, mocked_msal_app, *args):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = {
             "error": "dummy_error",
             "error_description": "dummy_error_description",
         }
 
         with pytest.raises(TokenError) as exc:
-            self.client.get(reverse("callback"))
+            self.client.get(reverse("azure_auth:callback"))
         assert str(exc.value) == "dummy_error\ndummy_error_description"
 
         self._msal_asserts(mocked_msal_app)
 
-    def test_callback_unauthorized(self, mocked_msal_app, mocked_requests):
+    def test_callback_unauthorized(
+        self, mocked_msal_app, mocked_requests, mocked_cache
+    ):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
             self.token
         )
+        mocked_cache.has_state_changed = True
+        mocked_cache.serialize = msal.SerializableTokenCache().serialize
+        mocked_cache.deserialize = msal.SerializableTokenCache().deserialize
 
         # Graph API response
         mocked_requests.get.side_effect = [
@@ -174,16 +189,21 @@ class TestCallbackView(TransactionTestCase):
         ]
 
         with pytest.raises(TokenError) as exc:
-            self.client.get(reverse("callback"))
+            self.client.get(reverse("azure_auth:callback"))
         assert str(exc.value) == "dummy_error\ndummy_message"
 
         self._msal_asserts(mocked_msal_app)
         self._graph_asserts(mocked_requests)
 
-    def test_callback_inactive_user(self, mocked_msal_app, mocked_requests):
+    def test_callback_inactive_user(
+        self, mocked_msal_app, mocked_requests, mocked_cache
+    ):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
             self.token
         )
+        mocked_cache.has_state_changed = True
+        mocked_cache.serialize = msal.SerializableTokenCache().serialize
+        mocked_cache.deserialize = msal.SerializableTokenCache().deserialize
 
         # Graph API response
         expected_response_json = self._get_graph_response(self.user)
@@ -194,7 +214,7 @@ class TestCallbackView(TransactionTestCase):
         # Make user inactive
         self.user.is_active = False
         self.user.save()
-        resp = self.client.get(reverse("callback"))
+        resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FORBIDDEN
         assert resp.content.decode() == "Invalid email for this app."
 
@@ -213,7 +233,7 @@ class TestLogoutView(TestCase):
                 for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
             ]
         )
-        resp = self.client.get(reverse("logout"))
+        resp = self.client.get(reverse("azure_auth:logout"))
         assert resp.status_code == HTTPStatus.FOUND
         assert (
             resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"
