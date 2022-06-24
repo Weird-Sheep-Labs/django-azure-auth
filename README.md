@@ -1,3 +1,5 @@
+![Build](https://github.com/AgileTek/django-azure-auth/actions/workflows/push-actions.yml/badge.svg)
+
 # Django Azure Auth
 A simple Django app for user authentication with Azure Active Directory.
 
