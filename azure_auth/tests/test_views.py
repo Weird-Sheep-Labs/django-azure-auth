@@ -20,7 +20,7 @@ UserModel = get_user_model()
 @patch.object(msal, "ConfidentialClientApplication")
 class TestLoginView(TestCase):
 
-    # TODO: What about if user is already logs in and hits this view
+    # TODO: What about if user is already logged in and hits this view
     # TODO: Any other breaking flows?
     def test_login(self, mocked_msal_app):
         mocked_msal_app.return_value.initiate_auth_code_flow.return_value = (

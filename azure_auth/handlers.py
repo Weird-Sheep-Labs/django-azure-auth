@@ -77,7 +77,14 @@ class AuthHandler:
         :return: Django user instance
         """
         azure_user = self._get_azure_user(token["access_token"])
-        email = azure_user["mail"]
+
+        # Allow for `outlook.com` users with email set on the
+        # `userPrincipalName` attribute
+        email = (
+            azure_user["mail"]
+            if azure_user["mail"]
+            else azure_user["userPrincipalName"]
+        )
 
         # Using `UserModel._default_manager.get_by_natural_key` handles custom
         # user model and `USERNAME_FIELD` setting

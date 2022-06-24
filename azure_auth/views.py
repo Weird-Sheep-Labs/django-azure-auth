@@ -21,5 +21,4 @@ def azure_auth_callback(request):
         login(request, user)
     else:
         return HttpResponseForbidden("Invalid email for this app.")
-    # TODO: Override this with a default in conf.py/django startup warnings?
-    return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL or "/admin")
+    return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
