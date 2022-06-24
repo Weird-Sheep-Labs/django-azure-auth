@@ -8,7 +8,6 @@ readme = "README.md"
 homepage = "https://github.com/AgileTek/django-azure-auth"
 keywords = []
 classifiers = [
-    "Private :: Do Not Upload",
     "Framework :: Django",
 ]
 packages = [
