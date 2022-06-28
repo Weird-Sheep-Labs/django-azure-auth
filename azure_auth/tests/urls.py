@@ -13,7 +13,7 @@ def public_view(request):
 
 
 def middleware_protected_view(request):
-    return HttpResponse("A view protected by the decorator")
+    return HttpResponse("A view protected by the middleware")
 
 
 @azure_auth_required

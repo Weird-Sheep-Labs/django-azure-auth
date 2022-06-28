@@ -1,3 +1,4 @@
+import copy
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -5,7 +6,7 @@ import msal
 import pytest
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from mixer.backend.django import Mixer
 
@@ -221,11 +222,15 @@ class TestCallbackView(TransactionTestCase):
 
 @patch.object(msal, "ConfidentialClientApplication")
 class TestLogoutView(TestCase):
+    # No redirect logout
+    no_redirect_logout_settings = copy.deepcopy(settings.AZURE_AUTH)
+    del no_redirect_logout_settings["LOGOUT_URI"]
+
     def setUp(self):
         super().setUp()
         self.client.force_login(self.user)
 
-    def test_logout(self, *args):
+    def test_logout_with_redirect(self, *args):
         # Check user has been correctly logged in
         assert all(
             [
@@ -239,4 +244,18 @@ class TestLogoutView(TestCase):
             resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"
             f"?post_logout_redirect_uri={settings.AZURE_AUTH['LOGOUT_URI']}"
         )
+        assert not self.client.session.keys()
+
+    @override_settings(AZURE_AUTH=no_redirect_logout_settings)
+    def test_logout_without_redirect(self, *args):
+        # Check user has been correctly logged in
+        assert all(
+            [
+                key in self.client.session
+                for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
+            ]
+        )
+        resp = self.client.get(reverse("azure_auth:logout"))
+        assert resp.status_code == HTTPStatus.FOUND
+        assert resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"
         assert not self.client.session.keys()
