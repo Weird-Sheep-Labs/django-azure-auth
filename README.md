@@ -7,9 +7,9 @@ A simple Django app for user authentication with Azure Active Directory.
 `django-azure-auth` is a Django app which wraps the great [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-python)
 package to enable authentication against Microsoft's Azure Active Directory in Django projects.
 
-The app includes `login`, `logout` and `callback` authentication views, and a decorator
-to protect other views. A `middleware` module will be included in an upcoming release, which
-will avoid the need to protect each view individually with the decorator.
+The app includes `login`, `logout` and `callback` authentication views, a decorator
+to protect individual views, and middleware which allows the entire site to require user 
+authentication by default, with the ability to exempt specified views.
 
 This project is in no way affiliated with Microsoft.
 
