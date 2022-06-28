@@ -66,8 +66,7 @@ jobs:
       - name: Deploy to PyPi
         run: |
           . install_poetry.sh
-          poetry config repositories.ael_pypi ${{ secrets.AEL_PYPI_REPOSITORY_URL }}
           poetry version prerelease
-          poetry publish --build --repository ael_pypi -u ${{ secrets.AEL_PYPI_USERNAME}} -p ${{ secrets.AEL_PYPI_PASSWORD }}
+          poetry publish --build -u ${{ secrets.PYPI_USERNAME}} -p ${{ secrets.PYPI_PASSWORD }}
           git commit -a -m "Prerelease bumped version [skip ci]"
           git push
