@@ -11,7 +11,7 @@ class AzureMiddleware:
 
     def __call__(self, request):
         public_views = ["azure_auth:login", "azure_auth:logout", "azure_auth:callback"]
-        public_views.extend(settings.AZURE_AUTH["PUBLIC_URLS"])
+        public_views.extend(settings.AZURE_AUTH.get("PUBLIC_URLS", []))
         public_urls = [reverse(view_name) for view_name in public_views]
 
         if request.path_info in public_urls:
