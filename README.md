@@ -88,7 +88,7 @@ following to your `settings.py`:
 ```python
 MIDDLEWARE = [
     "...",
-    "azure_auth.middleware.AzureAuthMiddleware",
+    "azure_auth.middleware.AzureMiddleware",
     "...",
 ]
 ```

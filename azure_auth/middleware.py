@@ -5,7 +5,7 @@ from django.urls import reverse
 from .handlers import AuthHandler
 
 
-class AzureAuthMiddleware:
+class AzureMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
