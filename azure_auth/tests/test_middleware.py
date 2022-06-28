@@ -10,10 +10,10 @@ from django.urls import reverse
 @pytest.mark.django_db
 @pytest.mark.usefixtures("token")
 @patch.object(msal, "ConfidentialClientApplication")
-class TestAzureAuthDecorator(TransactionTestCase):
+class TestAzureAuthMiddleware(TransactionTestCase):
     def test_invalid_token(self, mocked_msal_app):
         mocked_msal_app.return_value.acquire_token_silent.return_value = None
-        resp = self.client.get(reverse("decorator_protected"))
+        resp = self.client.get(reverse("middleware_protected"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == reverse("azure_auth:login")
 
@@ -21,7 +21,7 @@ class TestAzureAuthDecorator(TransactionTestCase):
         # Not sure how this situation could arise but test anyway...
 
         mocked_msal_app.return_value.acquire_token_silent.return_value = self.token
-        resp = self.client.get(reverse("decorator_protected"))
+        resp = self.client.get(reverse("middleware_protected"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == reverse("azure_auth:login")
 
@@ -29,5 +29,5 @@ class TestAzureAuthDecorator(TransactionTestCase):
         mocked_msal_app.return_value.acquire_token_silent.return_value = self.token
         self.client.force_login(self.user)
 
-        resp = self.client.get(reverse("decorator_protected"))
+        resp = self.client.get(reverse("middleware_protected"))
         assert resp.status_code == HTTPStatus.OK

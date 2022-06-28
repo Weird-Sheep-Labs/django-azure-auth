@@ -49,6 +49,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "azure_auth.middleware.AzureAuthMiddleware",
 ]
 
 AUTHENTICATION_BACKENDS = ("azure_auth.backends.AzureBackend",)
