@@ -31,3 +31,8 @@ class TestAzureAuthMiddleware(TransactionTestCase):
 
         resp = self.client.get(reverse("middleware_protected"))
         assert resp.status_code == HTTPStatus.OK
+
+    def test_public_view(self, mocked_msal_app):
+        mocked_msal_app.return_value.acquire_token_silent.return_value = None
+        resp = self.client.get(reverse("public"))
+        assert resp.status_code == HTTPStatus.OK

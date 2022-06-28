@@ -109,6 +109,7 @@ class AuthHandler:
         """
         authority = settings.AZURE_AUTH["AUTHORITY"]
         logout_uri = settings.AZURE_AUTH["LOGOUT_URI"]
+        # TODO: Handle when no LOGOUT_URI is specified
         return f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
 
     @property

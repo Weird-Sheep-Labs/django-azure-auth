@@ -134,6 +134,7 @@ AZURE_AUTH = {
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/dummy_tenant_id",
     "LOGOUT_URI": "http://mydomain/logout",
+    "PUBLIC_URLS": ["public", "decorator_protected"],
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"

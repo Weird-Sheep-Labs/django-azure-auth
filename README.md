@@ -36,6 +36,7 @@ AZURE_AUTH = {
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
+    "PUBLIC_URLS": ["<public:view_name>",]  # Public views accessible by non-authenticated users
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
@@ -80,8 +81,23 @@ from django.shortcuts import HttpResponse
 def protected_view(request):
     return HttpResponse("A view protected by the decorator")
 ```
+
+### Middleware
+If you want to protect your entire site by default, you can use the middleware by adding the 
+following to your `settings.py`:
+```python
+MIDDLEWARE = [
+    "...",
+    "azure_auth.middleware.AzureAuthMiddleware",
+    "...",
+]
+```
+Make sure you add the middleware after Django's `session` and `authentication` middlewares so 
+that the request includes the session and user objects. Public URLs which need to be accessed by 
+non-authenticated users should be specified in the `settings.AZURE_AUTH["PUBLIC_URLS"]`, as 
+shown above.
+
 ## Planned development
-- Middleware
 - Groups management
 
 ## Credits
