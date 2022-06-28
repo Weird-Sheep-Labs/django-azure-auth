@@ -60,7 +60,7 @@ class AuthHandler:
 
     def get_token_from_cache(self):
         accounts = self.msal_app.get_accounts()
-        if accounts:
+        if accounts:  # pragma: no branch
             # Will return `None` if CCA cannot retrieve or generate new token
             token_result = self.msal_app.acquire_token_silent(
                 scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0]
@@ -82,7 +82,7 @@ class AuthHandler:
         # `userPrincipalName` attribute
         email = (
             azure_user["mail"]
-            if azure_user["mail"]
+            if azure_user.get("mail", None)
             else azure_user["userPrincipalName"]
         )
 
