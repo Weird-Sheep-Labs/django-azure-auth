@@ -60,7 +60,7 @@ class AuthHandler:
 
     def get_token_from_cache(self):
         accounts = self.msal_app.get_accounts()
-        if accounts:
+        if accounts:  # pragma: no branch
             # Will return `None` if CCA cannot retrieve or generate new token
             token_result = self.msal_app.acquire_token_silent(
                 scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0]
@@ -82,7 +82,7 @@ class AuthHandler:
         # `userPrincipalName` attribute
         email = (
             azure_user["mail"]
-            if azure_user["mail"]
+            if azure_user.get("mail", None)
             else azure_user["userPrincipalName"]
         )
 
@@ -108,8 +108,12 @@ class AuthHandler:
         :return: Active Directory app logout URI
         """
         authority = settings.AZURE_AUTH["AUTHORITY"]
-        logout_uri = settings.AZURE_AUTH["LOGOUT_URI"]
-        return f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
+        logout_uri = settings.AZURE_AUTH.get("LOGOUT_URI", "")
+        if logout_uri:
+            return (
+                f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
+            )
+        return f"{authority}/oauth2/v2.0/logout"
 
     @property
     def msal_app(self):

@@ -7,9 +7,9 @@ A simple Django app for user authentication with Azure Active Directory.
 `django-azure-auth` is a Django app which wraps the great [MSAL](https://github.com/AzureAD/microsoft-authentication-library-for-python)
 package to enable authentication against Microsoft's Azure Active Directory in Django projects.
 
-The app includes `login`, `logout` and `callback` authentication views, and a decorator
-to protect other views. A `middleware` module will be included in an upcoming release, which
-will avoid the need to protect each view individually with the decorator.
+The app includes `login`, `logout` and `callback` authentication views, a decorator
+to protect individual views, and middleware which allows the entire site to require user 
+authentication by default, with the ability to exempt specified views.
 
 This project is in no way affiliated with Microsoft.
 
@@ -36,6 +36,7 @@ AZURE_AUTH = {
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
+    "PUBLIC_URLS": ["<public:view_name>",]  # Public views accessible by non-authenticated users
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
@@ -80,8 +81,23 @@ from django.shortcuts import HttpResponse
 def protected_view(request):
     return HttpResponse("A view protected by the decorator")
 ```
+
+### Middleware
+If you want to protect your entire site by default, you can use the middleware by adding the 
+following to your `settings.py`:
+```python
+MIDDLEWARE = [
+    "...",
+    "azure_auth.middleware.AzureAuthMiddleware",
+    "...",
+]
+```
+Make sure you add the middleware after Django's `session` and `authentication` middlewares so 
+that the request includes the session and user objects. Public URLs which need to be accessed by 
+non-authenticated users should be specified in the `settings.AZURE_AUTH["PUBLIC_URLS"]`, as 
+shown above.
+
 ## Planned development
-- Middleware
 - Groups management
 
 ## Credits
