@@ -41,6 +41,23 @@ def token(request):
         "refresh_token": "dummy_refresh_token",
         "id_token": "dummy_id_token",
         "client_info": "dummy_client_info",
+        "id_token_claims": {
+            "aud": "dummy_id_token_claims_aud",
+            "iss": "dummy_id_token_claims_iss",
+            "iat": 1655968842,
+            "nbf": 1655968842,
+            "exp": 1655972742,
+            "aio": "dummy_id_token_claims_aio",
+            "name": "dummy_id_token_claims_name",
+            "nonce": "dummy_id_token_claims_nonce",
+            "oid": "dummy_id_token_claims_oid",
+            "preferred_username": "dummy_id_token_claims_preferred_username",
+            "rh": "dummy_id_token_claims_rh",
+            "sub": "dummy_id_token_claims_sub",
+            "tid": "dummy_id_token_claims_tid",
+            "uti": "dummy_id_token_claims_uti",
+            "ver": "2.0",
+        },
     }
 
     if request.cls:
