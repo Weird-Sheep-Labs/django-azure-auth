@@ -124,6 +124,7 @@ class TestCallbackView(TransactionTestCase):
         resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
+        assert "id_token_claims" in self.client.session
 
         self._msal_asserts(mocked_msal_app)
         self._graph_asserts(mocked_requests)
@@ -149,6 +150,7 @@ class TestCallbackView(TransactionTestCase):
         resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
+        assert "id_token_claims" in self.client.session
 
         self._msal_asserts(mocked_msal_app)
         self._graph_asserts(mocked_requests)

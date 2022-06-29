@@ -56,6 +56,7 @@ class AuthHandler:
         if "error" in token_result:
             raise TokenError(token_result["error"], token_result["error_description"])
         self._save_cache()
+        self.request.session["id_token_claims"] = token_result["id_token_claims"]
         return token_result
 
     def get_token_from_cache(self):
