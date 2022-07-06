@@ -6,9 +6,11 @@ authors = ["AgileTek Engineering <london@agiletek.co.uk>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/AgileTek/django-azure-auth"
-keywords = []
+keywords = ['django', 'azure', 'authentication', 'microsoft']
 classifiers = [
     "Framework :: Django",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
 ]
 packages = [
     { include = "azure_auth"},
