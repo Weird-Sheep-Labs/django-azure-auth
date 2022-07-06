@@ -1,14 +1,16 @@
 [tool.poetry]
 name = "django-azure-auth"
-version = "1.0.2"
+version = "1.0.3"
 description = "A simple Django app for user authentication with Azure Active Directory."
 authors = ["AgileTek Engineering <london@agiletek.co.uk>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/AgileTek/django-azure-auth"
-keywords = []
+keywords = ['django', 'azure', 'authentication', 'microsoft']
 classifiers = [
     "Framework :: Django",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Information Technology",
 ]
 packages = [
     { include = "azure_auth"},
