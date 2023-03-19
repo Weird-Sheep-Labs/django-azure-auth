@@ -13,9 +13,17 @@ class AzureMiddleware:
         public_views = ["azure_auth:login", "azure_auth:logout", "azure_auth:callback"]
         public_views.extend(settings.AZURE_AUTH.get("PUBLIC_URLS", []))
         public_urls = [reverse(view_name) for view_name in public_views]
+        public_paths = settings.AZURE_AUTH.get(
+            "PUBLIC_PATHS", []
+        )  # added to resolve paths
 
         if request.path_info in public_urls:
             return self.get_response(request)
+
+        # Added to resolve paths that can't be reversed
+        for path in public_paths:
+            if request.path_info.startswith(path):
+                return self.get_response(request)
 
         if AuthHandler(request).get_token_from_cache():
             # If the user is authenticated

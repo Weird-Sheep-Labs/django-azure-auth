@@ -12,6 +12,10 @@ def public_view(request):
     return HttpResponse("Public view")
 
 
+def public_external_view(request):
+    return HttpResponse("Public external view")
+
+
 def middleware_protected_view(request):
     return HttpResponse("A view protected by the middleware")
 
@@ -24,6 +28,7 @@ def decorator_protected_view(request):
 urlpatterns = [
     path("", test_view),
     path("public/", public_view, name="public"),
+    path("public_external/", public_external_view, name="public_external"),
     path("decorator_protected/", decorator_protected_view, name="decorator_protected"),
     path(
         "middleware_protected/", middleware_protected_view, name="middleware_protected"
