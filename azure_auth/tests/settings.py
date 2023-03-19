@@ -135,6 +135,7 @@ AZURE_AUTH = {
     "AUTHORITY": "https://login.microsoftonline.com/dummy_tenant_id",
     "LOGOUT_URI": "http://mydomain/logout",
     "PUBLIC_URLS": ["public", "decorator_protected"],
+    "PUBLIC_PATHS": ["/public_external"],
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"
