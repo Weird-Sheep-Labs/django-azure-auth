@@ -44,7 +44,7 @@ AZURE_AUTH = {
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
-    "PUBLIC_URLS": ["<public:view_name>",]  # Optional, public views accessible by non-authenticated users
+    "PUBLIC_URLS": ["<public:view_name>",],  # Optional, public views accessible by non-authenticated users
     "PUBLIC_PATHS": ['/go/',],  # Optional, public paths accessible by non-authenticated users
     "ROLES": {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
