@@ -44,8 +44,9 @@ AZURE_AUTH = {
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
-    "PUBLIC_URLS": ["<public:view_name>",]  # Optional, public views accessible by non-authenticated users
+    "PUBLIC_URLS": ["<public:view_name>",],     # Optional, public views accessible by non-authenticated users
     "PUBLIC_PATHS": ['/go/',],  # Optional, public paths accessible by non-authenticated users
+    "CREATE_NEW_USER": True,    # Optional (Default True) Create new user if user does not exist
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
