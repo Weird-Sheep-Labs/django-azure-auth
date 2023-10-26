@@ -93,6 +93,7 @@ class AuthHandler:
             user = UserModel._default_manager.get_by_natural_key(email)
         except UserModel.DoesNotExist:
             if not settings.AZURE_AUTH.get("CREATE_NEW_USER", True):
+                self.request.session.flush()
                 return None
             user = UserModel._default_manager.create_user(username=email, email=email)
             user.first_name = attr if (attr := azure_user["givenName"]) else ""
