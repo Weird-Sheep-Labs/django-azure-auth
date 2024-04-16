@@ -21,7 +21,7 @@ python = "^3.8"
 msal = "^1.18.0"
 Django = ">=3.2"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.1.2"
 pre-commit = "^2.19.0"
 pytest-cov = "^3.0.0"
