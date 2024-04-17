@@ -101,22 +101,19 @@ class AuthHandler:
         # Syncing azure token claim roles with django user groups
         # A role mapping in the AZURE_AUTH settings is expected.
         role_mappings = settings.AZURE_AUTH.get("ROLES")
-        if role_mappings:
-            # Check if id_token_claims and roles are available
-            if token.get("id_token_claims", None):
-                azure_token_roles = token.get("id_token_claims", None).get("roles", None)
-
-                for role, group_name in role_mappings.items():
-                    # all groups are created by default if they not exist
-                    django_group = Group.objects.get_or_create(name=group_name)[0]
-                    
-                    if role in azure_token_roles:
-                        # user has permissions so we add him to the corresponding django group
-                        user.groups.add(django_group)
-                    else:
-                        # user has no permission check if user is in group and remove if so
-                        if user.groups.filter(name=group_name).exists():
-                            user.groups.remove(django_group)
+        azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
+        if role_mappings and azure_token_roles:
+            for role, group_name in role_mappings.items():
+                # all groups are created by default if they not exist
+                django_group = Group.objects.get_or_create(name=group_name)[0]
+                
+                if role in azure_token_roles:
+                    # user has permissions so we add him to the corresponding django group
+                    user.groups.add(django_group)
+                else:
+                    # user has no permission check if user is in group and remove if so
+                    if user.groups.filter(name=group_name).exists():
+                        user.groups.remove(django_group)
             
         return user
 
