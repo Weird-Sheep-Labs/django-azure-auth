@@ -138,8 +138,8 @@ AZURE_AUTH = {
     "PUBLIC_PATHS": ["/public_external"],
     "ROLES": {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
-        "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2"
-    }
+        "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2",
+    },
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"

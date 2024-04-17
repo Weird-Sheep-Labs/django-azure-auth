@@ -106,15 +106,15 @@ class AuthHandler:
             for role, group_name in role_mappings.items():
                 # all groups are created by default if they not exist
                 django_group = Group.objects.get_or_create(name=group_name)[0]
-                
+
                 if role in azure_token_roles:
-                    # user has permissions so we add him to the corresponding django group
+                    # Add user with permissions to the corresponding django group
                     user.groups.add(django_group)
                 else:
-                    # user has no permission check if user is in group and remove if so
+                    # No permission so check if user is in group and remove
                     if user.groups.filter(name=group_name).exists():
                         user.groups.remove(django_group)
-            
+
         return user
 
     @staticmethod

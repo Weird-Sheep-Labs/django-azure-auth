@@ -61,9 +61,9 @@ class TestCallbackView(TransactionTestCase):
         session = self.client.session
         session["auth_flow"] = self.auth_flow
         session.save()
-        
-        # Adds a group to existing user that is not part of the token. 
-        # Should be removed automatically during authentication. 
+
+        # Adds a group to existing user that is not part of the token.
+        # Should be removed automatically during authentication.
         dummy_group = Group.objects.get_or_create(name="GroupName2")[0]
         self.user.groups.add(dummy_group)
 
@@ -130,7 +130,7 @@ class TestCallbackView(TransactionTestCase):
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL
         assert "id_token_claims" in self.client.session
-        
+
         # Group creation checks in existing user
         assert Group.objects.filter(name="GroupName1").exists()
         assert Group.objects.filter(name="GroupName2").exists()
@@ -171,13 +171,12 @@ class TestCallbackView(TransactionTestCase):
         assert created_user.username == new_user.email
         assert created_user.first_name == new_user.first_name
         assert created_user.last_name == new_user.last_name
-        
+
         # Group creation checks
         assert Group.objects.filter(name="GroupName1").exists()
         assert Group.objects.filter(name="GroupName2").exists()
         assert created_user.groups.filter(name="GroupName1").exists()
         assert not created_user.groups.filter(name="GroupName2").exists()
-        
 
     def test_callback_acquire_token_error(self, mocked_msal_app, *args):
         mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = {
