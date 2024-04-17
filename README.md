@@ -1,8 +1,12 @@
-![Build](https://github.com/AgileTek/django-azure-auth/actions/workflows/push-actions.yml/badge.svg)
+![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/push-actions.yml/badge.svg)
 
 # Django Azure Auth
 
-A simple Django app for user authentication with Azure Active Directory.
+### A simple Django app for user authentication with Azure Active Directory.
+
+by Weird Sheep Labs
+
+<a target="_blank" href="https://weirdsheeplabs.com"><img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="50" width="50" /></a>
 
 ## Description
 
@@ -124,23 +128,26 @@ non-authenticated users should be specified in the `settings.AZURE_AUTH["PUBLIC_
 shown above.
 
 ## Groups Management
+
 Adding a group to the Azure Enterprise application will pass the group id down to the application via the token.
 This happens only, if the user is part of the group. In this case the group will be listed in the `token`.
 
 On how to configure this in Azure see here: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims
 
-Groups available in the token are synced with the corresponding django groups. Therfor the group id's from Azure need to be mapped in the 
+Groups available in the token are synced with the corresponding django groups. Therfor the group id's from Azure need to be mapped in the
 settings with the Django groups by adding the following to `AZURE_AUTH` in `settings`.
+
 ```
 "ROLES": {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
         "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2"
     }
 ```
+
 If a user is assigned to one or more of this groups listed in the configuration, the user will be added
-automatically to the respective Django group. The group will be created if it does not exist. 
+automatically to the respective Django group. The group will be created if it does not exist.
 If a user is not part of a group (revoke permissions case), but is still in the Django group, the user
-will be removed from the Django group. 
+will be removed from the Django group.
 
 ## Credits
 
