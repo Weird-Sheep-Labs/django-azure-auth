@@ -1,4 +1,4 @@
-![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/push-actions.yml/badge.svg)
+![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/ci.yml/badge.svg)
 
 # Django Azure Auth
 
