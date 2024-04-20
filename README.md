@@ -2,11 +2,15 @@
 
 # Django Azure Auth
 
-### A simple Django app for user authentication with Azure Active Directory.
+### A simple Django app for user authentication with Azure Active Directory/Entra ID.
 
 by Weird Sheep Labs
 
 <a target="_blank" href="https://weirdsheeplabs.com"><img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="50" width="50" /></a>
+
+#### Naming update
+
+In March 2024, [Microsoft renamed Azure Active Directory (Azure AD) to Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/fundamentals/new-name).
 
 ## Description
 

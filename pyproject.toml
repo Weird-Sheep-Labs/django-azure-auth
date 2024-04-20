@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "django-azure-auth"
 version = "1.2.1"
-description = "A simple Django app for user authentication with Azure Active Directory."
+description = "A simple Django app for user authentication with Azure Active Directory/Entra ID."
 authors = ["Weird Sheep Labs <info@weirdsheeplabs.com>"]
 license = "MIT"
 readme = "README.md"
 homepage = "https://github.com/Weird-Sheep-Labs/django-azure-auth"
-keywords = ['django', 'azure', 'authentication', 'microsoft']
+keywords = ['django', 'azure', 'authentication', 'microsoft', 'entra']
 classifiers = [
     "Framework :: Django",
     "Development Status :: 5 - Production/Stable",
