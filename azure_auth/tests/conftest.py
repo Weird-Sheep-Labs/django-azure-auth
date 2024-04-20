@@ -1,3 +1,5 @@
+from typing import Any
+
 import pytest
 from django.contrib.auth import get_user_model
 from mixer.backend.django import mixer
@@ -7,7 +9,7 @@ UserModel = get_user_model()
 
 @pytest.fixture(scope="function", autouse=True)
 def user(request):
-    _user = mixer.blend(UserModel)
+    _user: Any = mixer.blend(UserModel)
     _user.username = _user.email
     _user.save()
 

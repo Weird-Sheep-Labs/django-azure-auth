@@ -1,14 +1,16 @@
 from http import HTTPStatus
+from typing import cast
 
 import msal
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import AbstractBaseUser, Group
+from django.http import HttpRequest
 
 from azure_auth.exceptions import DjangoAzureAuthException, TokenError
 
-UserModel = get_user_model()
+UserModel = cast(AbstractBaseUser, get_user_model())
 
 
 class AuthHandler:
@@ -16,7 +18,7 @@ class AuthHandler:
     Class to interface with `msal` package and execute authentication process.
     """
 
-    def __init__(self, request=None):
+    def __init__(self, request: HttpRequest):
         """
 
         :param request: HttpRequest
@@ -42,7 +44,7 @@ class AuthHandler:
         self.request.session[self.auth_flow_session_key] = flow
         return flow["auth_uri"]
 
-    def get_token_from_flow(self) -> dict:
+    def get_token_from_flow(self):
         """
         Acquires the token from the auth flow on the session and the content of
         the redirect request from Active Directory.
@@ -70,7 +72,7 @@ class AuthHandler:
             self._save_cache()
             return token_result
 
-    def authenticate(self, token: dict) -> UserModel:
+    def authenticate(self, token: dict) -> AbstractBaseUser:
         """
         Helper method to authenticate the user. Gets the Azure user from the
         Microsoft Graph endpoint and gets/creates the associated Django user.
@@ -91,9 +93,9 @@ class AuthHandler:
         # Using `UserModel._default_manager.get_by_natural_key` handles custom
         # user model and `USERNAME_FIELD` setting
         try:
-            user = UserModel._default_manager.get_by_natural_key(email)
+            user = UserModel._default_manager.get_by_natural_key(email)  # type: ignore
         except UserModel.DoesNotExist:
-            user = UserModel._default_manager.create_user(username=email, email=email)
+            user = UserModel._default_manager.create_user(username=email, email=email)  # type: ignore
             user.first_name = attr if (attr := azure_user["givenName"]) else ""
             user.last_name = attr if (attr := azure_user["surname"]) else ""
             user.save()
