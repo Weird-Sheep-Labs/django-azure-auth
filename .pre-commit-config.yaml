@@ -10,7 +10,7 @@ repos:
       - id: poetry-check
       - id: poetry-lock
   - repo: https://github.com/Weird-Sheep-Labs/coverage-pre-commit
-    rev: 0.0.1
+    rev: 0.0.2
     hooks:
       - id: coverage-xml
         args: [-o, reports/coverage/coverage.xml]
