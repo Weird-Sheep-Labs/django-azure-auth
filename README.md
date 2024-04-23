@@ -5,7 +5,7 @@
 
 ### A simple Django app for user authentication with Azure Active Directory/Entra ID.
 
-by [Weird Sheep Labs](https://weirdsheeplabs.com/android-chrome-192x192.png)
+by [Weird Sheep Labs](https://weirdsheeplabs.com)
 
 <a target="_blank" href="https://weirdsheeplabs.com"><img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="40" width="40" /></a>
 
