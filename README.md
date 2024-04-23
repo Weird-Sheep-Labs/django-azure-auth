@@ -5,15 +5,9 @@
 
 ### A simple Django app for user authentication with Azure Active Directory/Entra ID.
 
-<div>
-    <span>by</span>
-    <a target="_blank" href="https://weirdsheeplabs.com" style="text-decoration: none; margin-left: 0.5em">
-        <span style="color: #c83737; font-size: 1.25em;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
-            Weird Sheep Labs
-        </span>
-        <img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="30" width="30" style="vertical-align: bottom"/>
-    </a>
-</div>
+by [Weird Sheep Labs](https://weirdsheeplabs.com/android-chrome-192x192.png)
+
+<a target="_blank" href="https://weirdsheeplabs.com"><img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="40" width="40" /></a>
 
 #### Naming update
 
@@ -171,6 +165,6 @@ Credit also to:
 - https://github.com/Azure-Samples/ms-identity-python-webapp
 - https://github.com/AzMoo/django-okta-auth
 
-<div align="center" style="margin-top: 4em">
+<div align="center">
     <img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="50" width="50"/>
 </div>
