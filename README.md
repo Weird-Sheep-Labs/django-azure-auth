@@ -1,13 +1,19 @@
 ![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/ci.yml/badge.svg)
 ![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)
 
-# Django Azure Auth
+# django-azure-auth
 
 ### A simple Django app for user authentication with Azure Active Directory/Entra ID.
 
-by Weird Sheep Labs
-
-<a target="_blank" href="https://weirdsheeplabs.com"><img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="50" width="50" /></a>
+<div>
+    <span>by</span>
+    <a target="_blank" href="https://weirdsheeplabs.com" style="text-decoration: none; margin-left: 0.5em">
+        <span style="color: #c83737; font-size: 1.25em;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
+            Weird Sheep Labs
+        </span>
+        <img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="30" width="30" style="vertical-align: bottom"/>
+    </a>
+</div>
 
 #### Naming update
 
@@ -164,3 +170,7 @@ Credit also to:
 
 - https://github.com/Azure-Samples/ms-identity-python-webapp
 - https://github.com/AzMoo/django-okta-auth
+
+<div align="center" style="margin-top: 4em">
+    <img src="https://weirdsheeplabs.com/android-chrome-192x192.png" height="50" width="50"/>
+</div>
