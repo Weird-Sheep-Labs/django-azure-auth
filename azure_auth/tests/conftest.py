@@ -60,6 +60,7 @@ def token(request):
             "uti": "dummy_id_token_claims_uti",
             "ver": "2.0",
             "roles": ["95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7"],
+            "login_hint": "dummy_id_token_claims_login_hint",
         },
     }
 

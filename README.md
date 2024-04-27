@@ -154,6 +154,10 @@ automatically to the respective Django group. The group will be created if it do
 If a user is not part of a group (revoke permissions case), but is still in the Django group, the user
 will be removed from the Django group.
 
+## Bypass logout account selection
+
+During logout, if the ID token includes only the default claims, Active Directory will present the user with a page prompting them to select the account to log out. To disable this, simply enable the `login_hint` optional claim in your client application in Azure, as described in https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-a-sign-out-request.
+
 ## Credits
 
 This app is heavily inspired by and builds on functionality in

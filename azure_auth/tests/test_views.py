@@ -240,17 +240,43 @@ class TestCallbackView(TransactionTestCase):
         assert resp.content.decode() == "Invalid email for this app."
 
 
-@patch.object(msal, "ConfidentialClientApplication")
+@pytest.mark.usefixtures("token")
 class TestLogoutView(TestCase):
     # No redirect logout
-    no_redirect_logout_settings = copy.deepcopy(settings.AZURE_AUTH)
-    del no_redirect_logout_settings["LOGOUT_URI"]
+    no_logout_query_params_settings = copy.deepcopy(settings.AZURE_AUTH)
+    del no_logout_query_params_settings["LOGOUT_URI"]
 
     def setUp(self):
         super().setUp()
         self.client.force_login(self.user)  # type: ignore
 
-    def test_logout_with_redirect(self, *args):
+        # Token will be on the session
+        session = self.client.session
+        session["id_token_claims"] = self.token["id_token_claims"]  # type: ignore
+        session.save()
+
+    def test_logout_with_query_params(self):
+        # Check user has been correctly logged in
+        assert all(
+            [
+                key in self.client.session
+                for key in [
+                    "_auth_user_id",
+                    "_auth_user_backend",
+                    "_auth_user_hash",
+                ]
+            ]
+        )
+        resp = self.client.get(reverse("azure_auth:logout"))
+        assert resp.status_code == HTTPStatus.FOUND
+        assert (
+            resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"  # type: ignore
+            f"?post_logout_redirect_uri=http%3A%2F%2Fmydomain%2Flogout&logout_hint=dummy_id_token_claims_login_hint"
+        )
+        assert not self.client.session.keys()
+
+    @override_settings(AZURE_AUTH=no_logout_query_params_settings)
+    def test_logout_without_query_params(self):
         # Check user has been correctly logged in
         assert all(
             [
@@ -261,21 +287,7 @@ class TestLogoutView(TestCase):
         resp = self.client.get(reverse("azure_auth:logout"))
         assert resp.status_code == HTTPStatus.FOUND
         assert (
-            resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"  # type: ignore
-            f"?post_logout_redirect_uri={settings.AZURE_AUTH['LOGOUT_URI']}"
+            resp.url  # type: ignore
+            == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout?logout_hint=dummy_id_token_claims_login_hint"
         )
-        assert not self.client.session.keys()
-
-    @override_settings(AZURE_AUTH=no_redirect_logout_settings)
-    def test_logout_without_redirect(self, *args):
-        # Check user has been correctly logged in
-        assert all(
-            [
-                key in self.client.session
-                for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
-            ]
-        )
-        resp = self.client.get(reverse("azure_auth:logout"))
-        assert resp.status_code == HTTPStatus.FOUND
-        assert resp.url == f"{settings.AZURE_AUTH['AUTHORITY']}/oauth2/v2.0/logout"  # type: ignore
         assert not self.client.session.keys()
