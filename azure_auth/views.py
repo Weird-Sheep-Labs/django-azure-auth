@@ -10,8 +10,11 @@ def azure_auth_login(request):
 
 
 def azure_auth_logout(request):
+    # Auth handler has to be initialized before `logout()` to load the claims from the session
+    auth_handler = AuthHandler(request)
+
     logout(request)
-    return HttpResponseRedirect(AuthHandler.get_logout_uri())
+    return HttpResponseRedirect(auth_handler.get_logout_uri())
 
 
 def azure_auth_callback(request):

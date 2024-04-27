@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import cast
+from urllib import parse
 
 import msal
 import requests
@@ -28,6 +29,9 @@ class AuthHandler:
         self.auth_flow_session_key = "auth_flow"
         self._cache = msal.SerializableTokenCache()
         self._msal_app = None
+
+        # Eagerly load the claims from the session
+        self.claims = self.request.session.get("id_token_claims", {})
 
     def get_auth_uri(self) -> str:
         """
@@ -119,8 +123,7 @@ class AuthHandler:
 
         return user
 
-    @staticmethod
-    def get_logout_uri() -> str:
+    def get_logout_uri(self) -> str:
         """
         Forms the URI to log the user out in the Active Directory app and
         redirect to the webapp logout page.
@@ -128,12 +131,12 @@ class AuthHandler:
         :return: Active Directory app logout URI
         """
         authority = settings.AZURE_AUTH["AUTHORITY"]
-        logout_uri = settings.AZURE_AUTH.get("LOGOUT_URI", "")
-        if logout_uri:
-            return (
-                f"{authority}/oauth2/v2.0/logout?post_logout_redirect_uri={logout_uri}"
-            )
-        return f"{authority}/oauth2/v2.0/logout"
+        _query_params = {
+            "post_logout_redirect_uri": settings.AZURE_AUTH.get("LOGOUT_URI"),
+            "logout_hint": self.claims.get("login_hint"),
+        }
+        query_params = {k: v for k, v in _query_params.items() if v}
+        return f"{authority}/oauth2/v2.0/logout?{parse.urlencode(query_params)}"
 
     @property
     def msal_app(self):
