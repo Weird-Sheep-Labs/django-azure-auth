@@ -239,6 +239,33 @@ class TestCallbackView(TransactionTestCase):
         assert resp.status_code == HTTPStatus.FORBIDDEN
         assert resp.content.decode() == "Invalid email for this app."
 
+    def test_callback_redirect(self, mocked_msal_app, mocked_requests, mocked_cache):
+        mocked_msal_app.return_value.acquire_token_by_auth_code_flow.return_value = (
+            self.token  # type: ignore
+        )
+        mocked_cache.has_state_changed = True
+        mocked_cache.serialize = msal.SerializableTokenCache().serialize
+        mocked_cache.deserialize = msal.SerializableTokenCache().deserialize
+
+        # Graph API response
+        expected_response_json = self._get_graph_response(self.user)  # type: ignore
+        mocked_requests.get.side_effect = [
+            self._mocked_response(HTTPStatus.OK, expected_response_json)
+        ]
+
+        # `next` should be on the session
+        session = self.client.session
+        session["next"] = "/middleware_protected/"  # type: ignore
+        session.save()
+
+        resp = self.client.get(reverse("azure_auth:callback"))
+        assert resp.status_code == HTTPStatus.FOUND
+        assert resp.url == reverse("middleware_protected")  # type: ignore
+        assert "id_token_claims" in self.client.session
+
+        self._msal_asserts(mocked_msal_app)
+        self._graph_asserts(mocked_requests)
+
 
 @pytest.mark.usefixtures("token")
 class TestLogoutView(TestCase):

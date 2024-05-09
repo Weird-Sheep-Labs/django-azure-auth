@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.http import HttpRequest
 from django.shortcuts import redirect
 from django.urls import reverse
 
@@ -9,7 +10,7 @@ class AzureMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
-    def __call__(self, request):
+    def __call__(self, request: HttpRequest):
         public_views = ["azure_auth:login", "azure_auth:logout", "azure_auth:callback"]
         public_views.extend(settings.AZURE_AUTH.get("PUBLIC_URLS", []))
         public_urls = [reverse(view_name) for view_name in public_views]
@@ -29,4 +30,7 @@ class AzureMiddleware:
             # If the user is authenticated
             if request.user.is_authenticated:
                 return self.get_response(request)
+
+        # Save the intended path on the session to be redirected there upon login
+        request.session["next"] = request.path
         return redirect("azure_auth:login")

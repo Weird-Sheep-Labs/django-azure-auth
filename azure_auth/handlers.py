@@ -40,7 +40,6 @@ class AuthHandler:
 
         :return: Authentication redirect URI
         """
-        # TODO: Handle if user has put incorrect details in settings
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
