@@ -1,5 +1,6 @@
 ![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/ci.yml/badge.svg)
 ![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)
+[![PyPI downloads](https://img.shields.io/pypi/dm/django-azure-auth.svg)](https://pypistats.org/packages/django-azure-auth)
 
 # django-azure-auth
 
