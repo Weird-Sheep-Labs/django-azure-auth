@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Auth handler no longer assumes the user model includes `first_name` and `last_name` fields.
+
+## [1.4.0] - 2024-05-10
+
+### Added
+
+- This changelog!
+
 ### Changed
 
 - Redirect to intended protected page after authentication and log in. Previously the user would always be redirected to the `LOGIN_REDIRECT_URL` (#25).
