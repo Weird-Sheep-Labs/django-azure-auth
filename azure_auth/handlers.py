@@ -1,3 +1,4 @@
+import datetime
 from http import HTTPStatus
 from typing import cast
 from urllib import parse
@@ -73,6 +74,13 @@ class AuthHandler:
                 scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0]
             )
             self._save_cache()
+
+            # `acquire_token_silent` doesn't always return ID token/ID token claims
+            # https://github.com/AzureAD/microsoft-authentication-library-for-python/issues/139
+            if token_result and token_result.get("id_token_claims"):
+                self.request.session["id_token_claims"] = token_result[
+                    "id_token_claims"
+                ]
             return token_result
 
     def authenticate(self, token: dict) -> AbstractBaseUser:
@@ -136,6 +144,20 @@ class AuthHandler:
         }
         query_params = {k: v for k, v in _query_params.items() if v}
         return f"{authority}/oauth2/v2.0/logout?{parse.urlencode(query_params)}"
+
+    @property
+    def user_is_authenticated(self) -> bool:
+        now = datetime.datetime.now(datetime.timezone.utc).timestamp()
+
+        # Check the ID token is still valid in the first instance
+        if now < self.claims.get("exp", 0) and self.request.user.is_authenticated:
+            return True
+
+        # Otherwise try refresh the token
+        return (
+            self.get_token_from_cache() is not None
+            and self.request.user.is_authenticated
+        )
 
     @property
     def msal_app(self):

@@ -26,10 +26,8 @@ class AzureMiddleware:
             if request.path_info.startswith(path):
                 return self.get_response(request)
 
-        if AuthHandler(request).get_token_from_cache():
-            # If the user is authenticated
-            if request.user.is_authenticated:
-                return self.get_response(request)
+        if AuthHandler(request).user_is_authenticated:
+            return self.get_response(request)
 
         # Save the intended path on the session to be redirected there upon login
         request.session["next"] = request.path
