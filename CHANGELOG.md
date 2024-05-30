@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Auth handler no longer assumes the user model includes `first_name` and `last_name` fields.
+- Users can now completely customize the mapping of AAD attributes to Django User model fields.
+
+## [1.4.1] - 2024-05-29
+
+### Changed
+
+- Auth handler now checks the expiry of the ID token claims when authenticating a request, rather than requesting a token from MSAL on every request, massively reducing latency (#27).
 
 ## [1.4.0] - 2024-05-10
 
