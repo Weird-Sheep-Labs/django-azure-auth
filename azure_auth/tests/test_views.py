@@ -45,6 +45,7 @@ class TestLoginView(TestCase):
         mocked_msal_app.return_value.initiate_auth_code_flow.assert_called_once_with(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
+            state=None,
         )
 
 
@@ -253,12 +254,9 @@ class TestCallbackView(TransactionTestCase):
             self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
 
-        # `next` should be on the session
-        session = self.client.session
-        session["next"] = "/middleware_protected/"  # type: ignore
-        session.save()
-
-        resp = self.client.get(reverse("azure_auth:callback"))
+        resp = self.client.get(
+            f"{reverse('azure_auth:callback')}?state=/middleware_protected/"
+        )
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == reverse("middleware_protected")  # type: ignore
         assert "id_token_claims" in self.client.session

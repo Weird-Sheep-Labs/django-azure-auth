@@ -29,6 +29,4 @@ class AzureMiddleware:
         if AuthHandler(request).user_is_authenticated:
             return self.get_response(request)
 
-        # Save the intended path on the session to be redirected there upon login
-        request.session["next"] = request.path
-        return redirect("azure_auth:login")
+        return redirect(f"{reverse('azure_auth:login')}?next={request.path}")

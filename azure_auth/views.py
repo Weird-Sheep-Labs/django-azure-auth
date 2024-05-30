@@ -1,3 +1,5 @@
+from urllib.parse import quote
+
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest, HttpResponseForbidden, HttpResponseRedirect
@@ -21,9 +23,10 @@ def azure_auth_callback(request: HttpRequest):
     token = AuthHandler(request).get_token_from_flow()
     user = authenticate(request, token=token)
     if user:
-        # Get the `next` URL from the anonymous session before login
-        next = request.session.get("next", "")
         login(request, user)
+
+        # Get `state` query param returned by AAD
+        next = quote(request.GET.get("state", ""), safe="/")
     else:
         return HttpResponseForbidden("Invalid email for this app.")
     return HttpResponseRedirect(next or settings.LOGIN_REDIRECT_URL)

@@ -1,6 +1,6 @@
 import datetime
 from http import HTTPStatus
-from typing import cast
+from typing import Optional, cast
 from urllib import parse
 
 import msal
@@ -34,16 +34,18 @@ class AuthHandler:
         # Eagerly load the claims from the session
         self.claims = self.request.session.get("id_token_claims", {})
 
-    def get_auth_uri(self) -> str:
+    def get_auth_uri(self, state: Optional[str] = None) -> str:
         """
         Requests the auth flow dictionary and stores it on the session to be
         queried later in the auth process.
 
+        :param state: State to persist during log in
         :return: Authentication redirect URI
         """
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
+            state=state,
         )
         self.request.session[self.auth_flow_session_key] = flow
         return flow["auth_uri"]
