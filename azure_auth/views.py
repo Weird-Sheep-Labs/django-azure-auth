@@ -8,7 +8,9 @@ from .handlers import AuthHandler
 
 
 def azure_auth_login(request: HttpRequest):
-    return HttpResponseRedirect(AuthHandler(request).get_auth_uri())
+    return HttpResponseRedirect(
+        AuthHandler(request).get_auth_uri(state=request.GET.get("next"))
+    )
 
 
 def azure_auth_logout(request: HttpRequest):

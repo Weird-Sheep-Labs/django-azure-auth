@@ -48,6 +48,30 @@ class TestLoginView(TestCase):
             state=None,
         )
 
+    def test_login_redirect(self, mocked_msal_app):
+        mocked_msal_app.return_value.initiate_auth_code_flow.return_value = (
+            self.auth_flow  # type: ignore
+        )
+        resp = self.client.get(f"{reverse('azure_auth:login')}?next=/dummy_next/")
+        assert resp.status_code == HTTPStatus.FOUND
+        assert resp.url == self.auth_flow["auth_uri"]  # type: ignore
+        assert self.client.session._session == {"auth_flow": self.auth_flow}  # type: ignore
+
+        # MSAL calls
+        mocked_msal_app.assert_called_once_with(
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
+            # Don't care about the `token_cache` object so just pipe it in
+            token_cache=mocked_msal_app.call_args.kwargs["token_cache"],
+        )
+
+        mocked_msal_app.return_value.initiate_auth_code_flow.assert_called_once_with(
+            scopes=settings.AZURE_AUTH["SCOPES"],
+            redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
+            state="/dummy_next/",
+        )
+
 
 @pytest.mark.django_db
 @pytest.mark.usefixtures("token")
