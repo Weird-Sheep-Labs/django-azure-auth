@@ -10,6 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Auth handler no longer assumes the user model includes `first_name` and `last_name` fields.
 - Users can now completely customize the mapping of AAD attributes to Django User model fields.
 
+## [1.4.2] - 2024-05-30
+
+### Changed
+
+- Change post-login redirect mechanism to use the AAD `state` parameter rather than the Django user session (#28).
+- Include the redirect functionality for decorator-protected views, not just middleware-protected views (#28).
+
 ## [1.4.1] - 2024-05-29
 
 ### Changed
