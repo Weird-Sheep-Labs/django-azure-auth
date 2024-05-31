@@ -2,6 +2,7 @@ import copy
 from http import HTTPStatus
 from typing import cast
 from unittest.mock import patch
+from urllib.parse import quote
 
 import msal
 import pytest
@@ -14,6 +15,7 @@ from mixer.backend.django import Mixer
 
 from azure_auth.exceptions import TokenError
 from azure_auth.handlers import AuthHandler
+from azure_auth.utils import EntraStateSerializer
 
 UserModel = get_user_model()
 
@@ -45,7 +47,7 @@ class TestLoginView(TestCase):
         mocked_msal_app.return_value.initiate_auth_code_flow.assert_called_once_with(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
-            state=None,
+            state='{"next": null}',
         )
 
     def test_login_redirect(self, mocked_msal_app):
@@ -69,7 +71,7 @@ class TestLoginView(TestCase):
         mocked_msal_app.return_value.initiate_auth_code_flow.assert_called_once_with(
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
-            state="/dummy_next/",
+            state='{"next": "/dummy_next/"}',
         )
 
 
@@ -279,7 +281,7 @@ class TestCallbackView(TransactionTestCase):
         ]
 
         resp = self.client.get(
-            f"{reverse('azure_auth:callback')}?state=/middleware_protected/"
+            f"{reverse('azure_auth:callback')}?state={quote(EntraStateSerializer().serialize(next='/middleware_protected/'), safe='/')}"
         )
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == reverse("middleware_protected")  # type: ignore

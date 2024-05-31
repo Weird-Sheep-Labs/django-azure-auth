@@ -1,15 +1,21 @@
-from urllib.parse import quote
+from urllib.parse import unquote
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpRequest, HttpResponseForbidden, HttpResponseRedirect
 
+from azure_auth.utils import EntraStateSerializer
+
 from .handlers import AuthHandler
+
+serializer = EntraStateSerializer()
 
 
 def azure_auth_login(request: HttpRequest):
     return HttpResponseRedirect(
-        AuthHandler(request).get_auth_uri(state=request.GET.get("next"))
+        AuthHandler(request).get_auth_uri(
+            state=serializer.serialize(next=request.GET.get("next"))
+        )
     )
 
 
@@ -28,7 +34,7 @@ def azure_auth_callback(request: HttpRequest):
         login(request, user)
 
         # Get `state` query param returned by AAD
-        next = quote(request.GET.get("state", ""), safe="/")
+        next = serializer.deserialize(unquote(request.GET.get("state", ""))).get("next")
     else:
         return HttpResponseForbidden("Invalid email for this app.")
     return HttpResponseRedirect(next or settings.LOGIN_REDIRECT_URL)
