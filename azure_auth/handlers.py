@@ -102,14 +102,15 @@ class AuthHandler:
         # TODO: Write system check for required AZURE_AUTH settings
         # TODO: Write specific tests for AuthHandler.authenticate with a combination of different custom user models, USERNAME_FIELD, USERNAME_ATTRIBUTE settings
         natural_key = azure_user[settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]]
+        extra_fields = {}
+        if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):
+            extra_fields = self._get_azure_user(token["access_token"], fields=fields)
         try:
             user = UserModel._default_manager.get_by_natural_key(natural_key)  # type: ignore
+
+            # Update user on authentication to reflect updates in AAD attributes
+            self._update_user(user, **azure_user, **extra_fields)
         except UserModel.DoesNotExist:
-            extra_fields = {}
-            if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):
-                extra_fields = self._get_azure_user(
-                    token["access_token"], fields=fields
-                )
             user = UserModel._default_manager.create_user(  # type: ignore
                 **{UserModel.USERNAME_FIELD: natural_key},  # type: ignore
                 **self._map_attributes_to_user(**azure_user, **extra_fields),
@@ -204,3 +205,11 @@ class AuthHandler:
 
         mod = importlib.import_module(path)
         return getattr(mod, fn)(**fields)
+
+    def _update_user(self, user: AbstractBaseUser, **fields):
+        path, fn = settings.AZURE_AUTH["USER_MAPPING_FN"].rsplit(".", 1)
+
+        mod = importlib.import_module(path)
+        for field, value in getattr(mod, fn)(**fields).items():
+            setattr(user, field, value)
+        user.save()

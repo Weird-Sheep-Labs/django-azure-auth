@@ -155,10 +155,18 @@ class TestCallbackView(TransactionTestCase):
         mocked_requests.get.side_effect = [
             self._mocked_response(HTTPStatus.OK, expected_response_json)
         ]
+
+        # Assert user is not staff before log in
+        assert self.user.is_staff is False  # type: ignore
+
         resp = self.client.get(reverse("azure_auth:callback"))
         assert resp.status_code == HTTPStatus.FOUND
         assert resp.url == settings.LOGIN_REDIRECT_URL  # type: ignore
         assert "id_token_claims" in self.client.session
+
+        # Attribute update checks
+        self.user.refresh_from_db()  # type: ignore
+        assert self.user.is_staff is True  # type: ignore
 
         # Group creation checks in existing user
         assert Group.objects.filter(name="GroupName1").exists()
@@ -203,6 +211,8 @@ class TestCallbackView(TransactionTestCase):
         assert created_user.username == new_user.email
         assert created_user.first_name == new_user.first_name
         assert created_user.last_name == new_user.last_name
+        assert created_user.is_staff is True
+        assert created_user.is_active is True
 
         # Group creation checks
         assert Group.objects.filter(name="GroupName1").exists()

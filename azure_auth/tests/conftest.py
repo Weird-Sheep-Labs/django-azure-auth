@@ -11,6 +11,7 @@ UserModel = get_user_model()
 def user(request):
     _user: Any = mixer.blend(UserModel)
     _user.username = _user.email
+    _user.is_staff = False
     _user.save()
 
     if request.cls:
