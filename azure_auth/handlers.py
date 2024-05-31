@@ -96,24 +96,25 @@ class AuthHandler:
         """
         azure_user = self._get_azure_user(token["access_token"])
 
-        # Using `UserModel._default_manager.get_by_natural_key` handles custom
-        # user model and `USERNAME_FIELD` setting
-
-        # TODO: Write system check for required AZURE_AUTH settings
-        # TODO: Write specific tests for AuthHandler.authenticate with a combination of different custom user models, USERNAME_FIELD, USERNAME_ATTRIBUTE settings
-        natural_key = azure_user[settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]]
+        # Get extra fields
         extra_fields = {}
         if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):
             extra_fields = self._get_azure_user(token["access_token"], fields=fields)
+
+        # Combine user profile attributes, extra attributes and ID token claims
+        # https://learn.microsoft.com/en-us/entra/external-id/customers/concept-user-attributes
+        # https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference
+        attributes = {**azure_user, **extra_fields, **token.get("id_token_claims", {})}
+        natural_key = attributes[settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]]
         try:
             user = UserModel._default_manager.get_by_natural_key(natural_key)  # type: ignore
 
-            # Update user on authentication to reflect updates in AAD attributes
-            self._update_user(user, **azure_user, **extra_fields)
+            # Sync Django user with AAD attributes
+            self._update_user(user, **attributes)
         except UserModel.DoesNotExist:
             user = UserModel._default_manager.create_user(  # type: ignore
                 **{UserModel.USERNAME_FIELD: natural_key},  # type: ignore
-                **self._map_attributes_to_user(**azure_user, **extra_fields),
+                **self._map_attributes_to_user(**attributes),
             )
 
         # Syncing azure token claim roles with django user groups
@@ -201,15 +202,16 @@ class AuthHandler:
             raise DjangoAzureAuthException("An unknown error occurred.")
 
     def _map_attributes_to_user(self, **fields) -> dict:
-        path, fn = settings.AZURE_AUTH["USER_MAPPING_FN"].rsplit(".", 1)
-
-        mod = importlib.import_module(path)
-        return getattr(mod, fn)(**fields)
+        if user_mapping_fn := settings.AZURE_AUTH.get("USER_MAPPING_FN"):
+            path, fn = user_mapping_fn.rsplit(".", 1)
+            mod = importlib.import_module(path)
+            return getattr(mod, fn)(**fields)
+        return {}
 
     def _update_user(self, user: AbstractBaseUser, **fields):
-        path, fn = settings.AZURE_AUTH["USER_MAPPING_FN"].rsplit(".", 1)
-
-        mod = importlib.import_module(path)
-        for field, value in getattr(mod, fn)(**fields).items():
-            setattr(user, field, value)
-        user.save()
+        if user_mapping_fn := settings.AZURE_AUTH.get("USER_MAPPING_FN"):
+            path, fn = user_mapping_fn.rsplit(".", 1)
+            mod = importlib.import_module(path)
+            for field, value in getattr(mod, fn)(**fields).items():
+                setattr(user, field, value)
+            user.save()

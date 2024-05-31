@@ -1,4 +1,22 @@
 from django.apps import AppConfig
+from django.conf import settings
+from django.core.checks import Error, register
+
+
+@register()
+def azure_auth_check(app_configs, **kwargs):
+    errors = []
+
+    if not settings.AZURE_AUTH.get("USERNAME_ATTRIBUTE"):
+        errors.append(
+            Error(
+                "misconfigured settings",
+                hint="Specify a value for `USERNAME_ATTIBUTE`.",
+                obj=settings.AZURE_AUTH,
+                id="azure_auth.E001",
+            )
+        )
+    return errors
 
 
 class AzureAuthConfig(AppConfig):
