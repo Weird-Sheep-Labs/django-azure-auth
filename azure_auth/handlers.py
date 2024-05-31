@@ -1,4 +1,5 @@
 import datetime
+import importlib
 from http import HTTPStatus
 from typing import Optional, cast
 from urllib import parse
@@ -95,23 +96,24 @@ class AuthHandler:
         """
         azure_user = self._get_azure_user(token["access_token"])
 
-        # Allow for `outlook.com` users with email set on the
-        # `userPrincipalName` attribute
-        email = (
-            azure_user["mail"]
-            if azure_user.get("mail", None)
-            else azure_user["userPrincipalName"]
-        )
-
         # Using `UserModel._default_manager.get_by_natural_key` handles custom
         # user model and `USERNAME_FIELD` setting
+
+        # TODO: Write system check for required AZURE_AUTH settings
+        # TODO: Write specific tests for AuthHandler.authenticate with a combination of different custom user models, USERNAME_FIELD, USERNAME_ATTRIBUTE settings
+        natural_key = azure_user[settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]]
         try:
-            user = UserModel._default_manager.get_by_natural_key(email)  # type: ignore
+            user = UserModel._default_manager.get_by_natural_key(natural_key)  # type: ignore
         except UserModel.DoesNotExist:
-            user = UserModel._default_manager.create_user(username=email, email=email)  # type: ignore
-            user.first_name = attr if (attr := azure_user["givenName"]) else ""
-            user.last_name = attr if (attr := azure_user["surname"]) else ""
-            user.save()
+            extra_fields = {}
+            if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):
+                extra_fields = self._get_azure_user(
+                    token["access_token"], fields=fields
+                )
+            user = UserModel._default_manager.create_user(  # type: ignore
+                **{UserModel.USERNAME_FIELD: natural_key},  # type: ignore
+                **self._map_attributes_to_user(**azure_user, **extra_fields),
+            )
 
         # Syncing azure token claim roles with django user groups
         # A role mapping in the AZURE_AUTH settings is expected.
@@ -182,9 +184,12 @@ class AuthHandler:
         if self.cache.has_state_changed:
             self.request.session["token_cache"] = self.cache.serialize()
 
-    def _get_azure_user(self, token: str):
+    def _get_azure_user(self, token: str, fields: Optional[dict] = None):
+        params = {"$select": ",".join(fields)} if fields else None
         resp = requests.get(
-            self.graph_user_endpoint, headers={"Authorization": f"Bearer {token}"}
+            self.graph_user_endpoint,
+            headers={"Authorization": f"Bearer {token}"},
+            params=params,
         )
         if resp.ok:
             return resp.json()
@@ -193,3 +198,9 @@ class AuthHandler:
             raise TokenError(message=error["code"], description=error["message"])
         else:  # pragma: no cover
             raise DjangoAzureAuthException("An unknown error occurred.")
+
+    def _map_attributes_to_user(self, **fields) -> dict:
+        path, fn = settings.AZURE_AUTH["USER_MAPPING_FN"].rsplit(".", 1)
+
+        mod = importlib.import_module(path)
+        return getattr(mod, fn)(**fields)

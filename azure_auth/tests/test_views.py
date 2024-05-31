@@ -137,6 +137,7 @@ class TestCallbackView(TransactionTestCase):
         mocked_requests.get.assert_called_once_with(
             "https://graph.microsoft.com/v1.0/me",
             headers={"Authorization": f"Bearer {self.token['access_token']}"},  # type: ignore
+            params=None,
         )
 
     def test_callback_existing_user(
@@ -195,7 +196,10 @@ class TestCallbackView(TransactionTestCase):
         self._graph_asserts(mocked_requests)
 
         # User creation checks
-        created_user = cast(AbstractUser, UserModel.objects.get(email=new_user.email))
+        created_user = cast(
+            AbstractUser,
+            UserModel._default_manager.get_by_natural_key(new_user.email),  # type: ignore
+        )
         assert created_user.username == new_user.email
         assert created_user.first_name == new_user.first_name
         assert created_user.last_name == new_user.last_name

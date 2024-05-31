@@ -140,6 +140,9 @@ AZURE_AUTH = {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
         "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2",
     },
+    "USERNAME_ATTRIBUTE": "mail",
+    "EXTRA_FIELDS": [],
+    "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn",
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"
