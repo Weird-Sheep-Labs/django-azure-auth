@@ -59,13 +59,23 @@ AZURE_AUTH = {
     "ROLES": {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
         "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2"
-    }  # Optional, will add user to django group if user is in EntraID group
+    },  # Optional, will add user to django group if user is in EntraID group
+    "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
+    "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
+    "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn", # Optional, path to the function used to map the AAD to Django attributes
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
 ```
 
 #### Note: You should obfuscate the credentials by using environment variables.
+
+### Username field
+
+Make sure you configure the `settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]` setting to the AAD attribute or ID token claim you want to use for the `USERNAME_FIELD` of your user model. Common choices are `mail`, `sub` or `oid`.
+
+> [!NOTE]
+> In version 1.x.x this was hardcoded to `mail`.
 
 ### Installed apps
 
@@ -133,7 +143,42 @@ that the request includes the session and user objects. Public URLs which need t
 non-authenticated users should be specified in the `settings.AZURE_AUTH["PUBLIC_URLS"]`, as
 shown above.
 
-## Groups Management
+### User attributes mapping
+
+A common use-case is to save attributes/claims from AAD on fields of the Django user model. Rather than providing a way to configure a 1-to-1 mapping, `django-azure-auth` allows you to define a function that takes in the AAD attributes/claims and transform/compose them into Django user model values, in a completely customizable way. As an example, suppose you have the following user model:
+
+```python
+class User(AbstractUser):
+    full_name = models.CharField()
+```
+
+You want to populate the `full_name` field using the `givenName` and `surname` AAD user attributes i.e not a 1-to-1 mapping. You also want to mark the user as staff.
+
+You can do this by simply defining the below function and specifying the `settings.AZURE_AUTH["USER_MAPPING_FN"]` setting as the import path of the function:
+
+```python
+# main/utils.py
+
+def user_mapping_fn(**attributes):
+    return {
+        "first_name": attributes["givenName"] + attributes["surname"],
+        "is_staff": True,
+    }
+```
+
+> [!NOTE]
+> In this example, the `USER_MAPPING_FN` setting would be specified as "main.utils.user_mapping_fn".
+
+The attributes passed to the mapping function will include:
+
+- The default user profile attributes https://learn.microsoft.com/en-us/entra/external-id/customers/concept-user-attributes
+- The ID token claims https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference
+- Any extra user attributes specified in `settings.AZURE_AUTH["EXTRA_FIELDS"]
+
+> [!IMPORTANT]
+> The mapping function **must** return a dictionary whose keys are all valid attributes/fields of your user model, otherwise an AttributeError will be raised during authentication.
+
+### Groups management
 
 Adding a group to the Azure Enterprise application will pass the group id down to the application via the token.
 This happens only, if the user is part of the group. In this case the group will be listed in the `token`.
@@ -155,7 +200,7 @@ automatically to the respective Django group. The group will be created if it do
 If a user is not part of a group (revoke permissions case), but is still in the Django group, the user
 will be removed from the Django group.
 
-## Bypass logout account selection
+### Bypass logout account selection
 
 During logout, if the ID token includes only the default claims, Active Directory will present the user with a page prompting them to select the account to log out. To disable this, simply enable the `login_hint` optional claim in your client application in Azure, as described in https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-a-sign-out-request.
 

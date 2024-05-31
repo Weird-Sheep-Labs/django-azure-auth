@@ -1,6 +1,6 @@
-def user_mapping_fn(**fields):
+def user_mapping_fn(**attributes):
     return {
-        "first_name": fields["givenName"],
-        "last_name": fields["surname"],
+        "first_name": attributes["givenName"],
+        "last_name": attributes["surname"],
         "is_staff": True,
     }

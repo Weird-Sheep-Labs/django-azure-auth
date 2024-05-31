@@ -7,14 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Auth handler no longer assumes the user model includes `first_name` and `last_name` fields.
-- Users can now completely customize the mapping of AAD attributes to Django User model fields.
+- Auth handler no longer assumes the user model includes `first_name` and `last_name` fields ([#23](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/23)).
+
+### Changed
+
+- Optional AAD attributes to be retrieved can be specified in the settings ([#11](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/11)).
+- AAD attributes and ID token claims can be mapped to Django User model fields using a user-defined function ([#23](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/23)).
 
 ## [1.4.3] - 2024-05-31
 
 ### Fixed
 
-- Fixed login callback redirect bug caused by AAD `state` parameter being populated by Azure AD when empty (#30).
+- Fixed login callback redirect bug caused by AAD `state` parameter being populated by Azure AD when empty ([#30](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/30)).
 
 ## [1.4.2] - 2024-05-30
 
