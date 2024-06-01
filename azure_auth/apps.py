@@ -11,7 +11,7 @@ def azure_auth_check(app_configs, **kwargs):
         errors.append(
             Error(
                 "misconfigured settings",
-                hint="Specify a value for `USERNAME_ATTIBUTE`.",
+                hint="Specify a value for `USERNAME_ATTRIBUTE`.",
                 obj=settings.AZURE_AUTH,
                 id="azure_auth.E001",
             )
