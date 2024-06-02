@@ -7,7 +7,7 @@ on:
       - main
 
 env:
-  SKIP: ${{ vars.SKIP }}
+  SKIP: "poetry-lock"
 
 jobs:
   default:
