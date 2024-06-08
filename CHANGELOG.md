@@ -5,9 +5,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2024-06-08
+
 ### Fixed
 
-- Auth handler no longer assumes the user model includes `first_name` and `last_name` fields ([#23](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/23)).
+- Auth handler no longer assumes the user model includes `first_name` and `last_name` fields ([#23](https://github.com/Weird-Sheep-Labs/django-azure-auth/issues/23)). This introduces a breaking change as these fields are no longer populated on the model by default.
 
 ### Changed
 
