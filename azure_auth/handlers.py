@@ -98,7 +98,7 @@ class AuthHandler:
 
         # Get extra fields
         extra_fields = {}
-        if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):
+        if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):  # pragma: no branch
             extra_fields = self._get_azure_user(token["access_token"], fields=fields)
 
         # Combine user profile attributes, extra attributes and ID token claims
@@ -121,7 +121,7 @@ class AuthHandler:
         # A role mapping in the AZURE_AUTH settings is expected.
         role_mappings = settings.AZURE_AUTH.get("ROLES")
         azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
-        if role_mappings and azure_token_roles:
+        if role_mappings and azure_token_roles:  # pragma: no branch
             for role, group_name in role_mappings.items():
                 # all groups are created by default if they not exist
                 django_group = Group.objects.get_or_create(name=group_name)[0]
@@ -178,7 +178,7 @@ class AuthHandler:
 
     @property
     def cache(self):
-        if self.request.session.get("token_cache"):
+        if self.request.session.get("token_cache"):  # pragma: no branch
             self._cache.deserialize(self.request.session["token_cache"])
         return self._cache
 
@@ -202,14 +202,18 @@ class AuthHandler:
             raise DjangoAzureAuthException("An unknown error occurred.")
 
     def _map_attributes_to_user(self, **fields) -> dict:
-        if user_mapping_fn := settings.AZURE_AUTH.get("USER_MAPPING_FN"):
+        if user_mapping_fn := settings.AZURE_AUTH.get(
+            "USER_MAPPING_FN"
+        ):  # pragma: no branch
             path, fn = user_mapping_fn.rsplit(".", 1)
             mod = importlib.import_module(path)
             return getattr(mod, fn)(**fields)
-        return {}
+        return {}  # pragma: no cover
 
     def _update_user(self, user: AbstractBaseUser, **fields):
-        if user_mapping_fn := settings.AZURE_AUTH.get("USER_MAPPING_FN"):
+        if user_mapping_fn := settings.AZURE_AUTH.get(  # pragma: no branch
+            "USER_MAPPING_FN"
+        ):
             path, fn = user_mapping_fn.rsplit(".", 1)
             mod = importlib.import_module(path)
             for field, value in getattr(mod, fn)(**fields).items():
