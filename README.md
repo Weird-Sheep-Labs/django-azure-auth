@@ -161,7 +161,7 @@ You can do this by simply defining the below function and specifying the `settin
 
 def user_mapping_fn(**attributes):
     return {
-        "first_name": attributes["givenName"] + attributes["surname"],
+        "full_name": attributes["givenName"] + attributes["surname"],
         "is_staff": True,
     }
 ```
