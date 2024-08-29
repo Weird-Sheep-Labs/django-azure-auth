@@ -121,12 +121,12 @@ class AuthHandler:
         # A role mapping in the AZURE_AUTH settings is expected.
         role_mappings = settings.AZURE_AUTH.get("ROLES")
         azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
-        if role_mappings and azure_token_roles:  # pragma: no branch
+        if role_mappings:  # pragma: no branch
             for role, group_name in role_mappings.items():
                 # all groups are created by default if they not exist
                 django_group = Group.objects.get_or_create(name=group_name)[0]
 
-                if role in azure_token_roles:
+                if azure_token_roles and role in azure_token_roles:
                     # Add user with permissions to the corresponding django group
                     user.groups.add(django_group)
                 else:
