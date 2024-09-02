@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-azure-auth"
-version = "2.0.0"
+version = "2.0.1"
 description = "A simple Django app for user authentication with Azure Active Directory/Entra ID."
 authors = ["Weird Sheep Labs <info@weirdsheeplabs.com>"]
 license = "MIT"
