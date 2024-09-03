@@ -1,4 +1,4 @@
-from urllib.parse import unquote
+from urllib.parse import unquote, urlparse
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
@@ -35,6 +35,8 @@ def azure_auth_callback(request: HttpRequest):
 
         # Get `state` query param returned by AAD
         next = serializer.deserialize(unquote(request.GET.get("state", ""))).get("next")
+        if next:
+            next = urlparse(next).path
     else:
         return HttpResponseForbidden("Invalid email for this app.")
     return HttpResponseRedirect(next or settings.LOGIN_REDIRECT_URL)
