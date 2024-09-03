@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from django.conf import settings
 from django.http import HttpRequest
 from django.shortcuts import redirect
@@ -29,4 +31,6 @@ class AzureMiddleware:
         if AuthHandler(request).user_is_authenticated:
             return self.get_response(request)
 
-        return redirect(f"{reverse('azure_auth:login')}?next={request.path}")
+        return redirect(
+            f"{reverse('azure_auth:login')}?next={urlparse(request.path).path}"
+        )
