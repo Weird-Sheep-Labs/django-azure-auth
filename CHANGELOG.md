@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.2] - 2024-09-03
+
+### Fixed
+
+- Validates that the `next` path is a relative path to only allow redirects within the host domain.
+
 ## [2.0.1] - 2024-09-02
 
 ### Fixed
