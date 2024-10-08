@@ -180,10 +180,12 @@ The attributes passed to the mapping function will include:
 
 ### Groups management
 
-Adding a group to the Azure Enterprise application will pass the group id down to the application via the token.
-This happens only, if the user is part of the group. In this case the group will be listed in the `token`.
+Adding a group to the Azure Enterprise application will pass the group id down to the application via the `id_token`, provided that the user is part of the group.
+On how to configure this optional group claim in Azure see here: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims
 
-On how to configure this in Azure see here: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims
+> [!NOTE]
+> Note that the default key will be `groups` though while the app expects this information under the `roles` key of the `id_token`. To make sure that the group information is fed down as a role claim, select the **Emit groups as role claims** checkbox, when configuring the group claims (https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims#customize-group-claim-name).
+
 
 Groups available in the token are synced with the corresponding django groups. Therfor the group id's from Azure need to be mapped in the
 settings with the Django groups by adding the following to `AZURE_AUTH` in `settings`.
