@@ -27,7 +27,9 @@ class AuthHandler:
         :param request: HttpRequest
         """
         self.request = request
-        self.graph_user_endpoint = "https://graph.microsoft.com/v1.0/me"
+        self.graph_user_endpoint = settings.AZURE_AUTH.get(
+            "GRAPH_USER_ENDPOINT", "https://graph.microsoft.com/v1.0/me"
+        )
         self.auth_flow_session_key = "auth_flow"
         self._cache = msal.SerializableTokenCache()
         self._msal_app = None
