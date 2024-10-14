@@ -63,6 +63,7 @@ AZURE_AUTH = {
     "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
     "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
     "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn", # Optional, path to the function used to map the AAD to Django attributes
+    "GRAPH_USER_ENDPOINT": "https://graph.microsoft.com/v1.0/me", # Optional, URL to the Graph endpoint that returns user info
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
