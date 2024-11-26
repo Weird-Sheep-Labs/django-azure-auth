@@ -14,13 +14,14 @@ from django.http import HttpRequest
 from azure_auth.exceptions import DjangoAzureAuthException, TokenError
 
 UserModel = cast(AbstractBaseUser, get_user_model())
-GROUPS_UPDATED = false
 
 
 class AuthHandler:
     """
     Class to interface with `msal` package and execute authentication process.
     """
+
+    GROUPS_UPDATED = False
 
     def __init__(self, request: HttpRequest):
         """
@@ -120,24 +121,30 @@ class AuthHandler:
                 **self._map_attributes_to_user(**attributes),
             )
 
-        if not GROUPS_UPDATED:
+        if not AuthHandler.GROUPS_UPDATED:
             role_mappings = settings.AZURE_AUTH.get("ROLES")
             for group_name in role_mappings.values():
                 Group.objects.get_or_create(name=group_name)
-            GROUPS_UPDATED = True
+            AuthHandler.GROUPS_UPDATED = True
 
         # Syncing azure token claim roles with django user groups
         # A role mapping in the AZURE_AUTH settings is expected.
         role_mappings = settings.AZURE_AUTH.get("ROLES")
         azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
         if role_mappings:  # pragma: no branch
-            token_groups = [name for (id, name) in role_mappings.items() if id in azure_token_roles]
+            token_groups = [
+                name for (id, name) in role_mappings.items() if id in azure_token_roles
+            ]
             current_groups = list(user.groups.values_list("name", flat=True))
 
             if to_add := [item for item in token_groups if item not in current_groups]:
                 user.groups.add(*Group.objects.filter(name__in=to_add))
 
-            if to_remove := [item for item in current_groups if item in role_mappings.values() and item not in token_groups]:
+            if to_remove := [
+                item
+                for item in current_groups
+                if item in role_mappings.values() and item not in token_groups
+            ]:
                 user.groups.remove(*Group.objects.filter(name__in=to_remove))
 
         return user
