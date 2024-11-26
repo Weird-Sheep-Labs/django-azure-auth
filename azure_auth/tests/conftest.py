@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from django.contrib.auth import get_user_model
 from mixer.backend.django import mixer
+from azure_auth.handlers import AuthHandler
 
 UserModel = get_user_model()
 
@@ -17,6 +18,11 @@ def user(request):
     if request.cls:
         request.cls.user = _user
     return _user
+
+
+@pytest.fixture(scope="function", autouse=True)
+def clean_groups():
+    AuthHandler.GROUPS_UPDATED = False
 
 
 @pytest.fixture(scope="function")
