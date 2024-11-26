@@ -22,3 +22,13 @@ def azure_auth_check(app_configs, **kwargs):
 class AzureAuthConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "azure_auth"
+
+    def ready(self) -> None:
+        from django.contrib.auth.models import Group
+
+        role_mappings = settings.AZURE_AUTH.get("ROLES")
+
+        for group_name in role_mappings.values():
+            Group.objects.get_or_create(name=group_name)
+
+        return super().ready()

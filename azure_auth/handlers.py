@@ -124,17 +124,14 @@ class AuthHandler:
         role_mappings = settings.AZURE_AUTH.get("ROLES")
         azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
         if role_mappings:  # pragma: no branch
-            for role, group_name in role_mappings.items():
-                # all groups are created by default if they not exist
-                django_group = Group.objects.get_or_create(name=group_name)[0]
+            token_groups = [name for (id, name) in role_mappings.items() if id in azure_token_roles]
+            current_groups = list(user.groups.values_list("name", flat=True))
 
-                if azure_token_roles and role in azure_token_roles:
-                    # Add user with permissions to the corresponding django group
-                    user.groups.add(django_group)
-                else:
-                    # No permission so check if user is in group and remove
-                    if user.groups.filter(name=group_name).exists():
-                        user.groups.remove(django_group)
+            if to_add := [item for item in token_groups if item not in current_groups]:
+                user.groups.add(*Group.objects.filter(name__in=to_add))
+
+            if to_remove := [item for item in current_groups if item in role_mappings.values() and item not in token_groups]:
+                user.groups.remove(*Group.objects.filter(name__in=to_remove))
 
         return user
 
