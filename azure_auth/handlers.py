@@ -119,10 +119,18 @@ class AuthHandler:
                 **self._map_attributes_to_user(**attributes),
             )
 
-        # Syncing azure token claim roles with django user groups
-        # A role mapping in the AZURE_AUTH settings is expected.
+        user = self.sync_groups(user, token)
+
+        return user
+
+    # Syncing azure token claim roles with django user groups
+    # A role mapping in the AZURE_AUTH settings is expected.
+    # The attribute of the token to use for group membership can be specified
+    #   in AZURE_AUTH.GROUP_ATTRIBUTE
+    def sync_groups(self, user, token):
         role_mappings = settings.AZURE_AUTH.get("ROLES")
-        azure_token_roles = token.get("id_token_claims", {}).get("roles", None)
+        groups_attr = settings.AZURE_AUTH.get("GROUP_ATTRIBUTE", "roles")
+        azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, None)
         if role_mappings:  # pragma: no branch
             for role, group_name in role_mappings.items():
                 # all groups are created by default if they not exist

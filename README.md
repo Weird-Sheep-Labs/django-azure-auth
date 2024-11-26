@@ -61,6 +61,7 @@ AZURE_AUTH = {
         "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2"
     },  # Optional, will add user to django group if user is in EntraID group
     "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
+    "GROUP_ATTRIBUTE": "roles",   # The AAD attribute or ID token claim you want to use as the value for the user's group memberships
     "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
     "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn", # Optional, path to the function used to map the AAD to Django attributes
     "GRAPH_USER_ENDPOINT": "https://graph.microsoft.com/v1.0/me", # Optional, URL to the Graph endpoint that returns user info
@@ -185,7 +186,7 @@ Adding a group to the Azure Enterprise application will pass the group id down t
 On how to configure this optional group claim in Azure see here: https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims
 
 > [!NOTE]
-> Note that the default key will be `groups` though while the app expects this information under the `roles` key of the `id_token`. To make sure that the group information is fed down as a role claim, select the **Emit groups as role claims** checkbox, when configuring the group claims (https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims#customize-group-claim-name).
+> Note that the default key will be `groups` though while the app expects this information under the `roles` key of the `id_token`. To make sure that the group information is fed down as a role claim, select the **Emit groups as role claims** checkbox, when configuring the group claims (https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims#customize-group-claim-name). Alternatively, you can set `settings.AZURE_AUTH.GROUP_ATTRIBUTE = 'groups'` to use the default attribute
 
 
 Groups available in the token are synced with the corresponding django groups. Therfor the group id's from Azure need to be mapped in the
