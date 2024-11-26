@@ -14,6 +14,7 @@ from django.http import HttpRequest
 from azure_auth.exceptions import DjangoAzureAuthException, TokenError
 
 UserModel = cast(AbstractBaseUser, get_user_model())
+GROUPS_UPDATED = false
 
 
 class AuthHandler:
@@ -118,6 +119,12 @@ class AuthHandler:
                 **{UserModel.USERNAME_FIELD: natural_key},  # type: ignore
                 **self._map_attributes_to_user(**attributes),
             )
+
+        if not GROUPS_UPDATED:
+            role_mappings = settings.AZURE_AUTH.get("ROLES")
+            for group_name in role_mappings.values():
+                Group.objects.get_or_create(name=group_name)
+            GROUPS_UPDATED = True
 
         # Syncing azure token claim roles with django user groups
         # A role mapping in the AZURE_AUTH settings is expected.
