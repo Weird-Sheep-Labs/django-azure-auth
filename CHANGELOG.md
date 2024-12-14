@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.2.0] - 2024-12-14
+
+### Changed
+
+- Add optional setting to specify which Microsoft groups attribute to use i.e `roles` or `groups`.
+
 ## [2.1.0] - 2024-10-15
 
 ### Added
