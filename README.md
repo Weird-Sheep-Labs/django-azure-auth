@@ -1,6 +1,7 @@
 ![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/ci.yml/badge.svg)
 ![Coverage Status](./reports/coverage/coverage-badge.svg?dummy=8484744)
 [![PyPI downloads](https://img.shields.io/pypi/dm/django-azure-auth.svg)](https://pypistats.org/packages/django-azure-auth)
+[![PyPI Downloads](https://static.pepy.tech/badge/django-azure-auth)](https://pepy.tech/projects/django-azure-auth)
 
 # django-azure-auth
 
@@ -187,7 +188,6 @@ On how to configure this optional group claim in Azure see here: https://learn.m
 
 > [!NOTE]
 > Note that the default key will be `groups` though while the app expects this information under the `roles` key of the `id_token`. To make sure that the group information is fed down as a role claim, select the **Emit groups as role claims** checkbox, when configuring the group claims (https://learn.microsoft.com/en-us/entra/identity/hybrid/connect/how-to-connect-fed-group-claims#customize-group-claim-name). Alternatively, you can set `settings.AZURE_AUTH.GROUP_ATTRIBUTE = 'groups'` to use the default attribute
-
 
 Groups available in the token are synced with the corresponding django groups. Therfor the group id's from Azure need to be mapped in the
 settings with the Django groups by adding the following to `AZURE_AUTH` in `settings`.
