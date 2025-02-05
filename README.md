@@ -51,6 +51,10 @@ from your Azure app:
 AZURE_AUTH = {
     "CLIENT_ID": "<client id>",
     "CLIENT_SECRET": "<client secret>",
+    # REDIRECT_URI must be set to one of
+    # - an absolute URI starting with "http" or "https", e. g. https://<domain>/azure_auth/callback
+    # - a relative URI starting with "/", e. g. /azure_auth/callback
+    # - a call to reverse_lazy, e. g. reverse_lazy("azure_auth:callback")
     "REDIRECT_URI": "https://<domain>/azure_auth/callback",
     "SCOPES": ["User.Read"],
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
