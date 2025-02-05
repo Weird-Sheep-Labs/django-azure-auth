@@ -45,9 +45,10 @@ class AuthHandler:
         :param state: State to persist during log in
         :return: Authentication redirect URI
         """
+        redirect_uri = self._get_redirect_uri()
         flow = self.msal_app.initiate_auth_code_flow(
             scopes=settings.AZURE_AUTH["SCOPES"],
-            redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
+            redirect_uri=redirect_uri,
             state=state,
         )
         self.request.session[self.auth_flow_session_key] = flow
@@ -229,3 +230,12 @@ class AuthHandler:
             for field, value in getattr(mod, fn)(**fields).items():
                 setattr(user, field, value)
             user.save()
+
+    def _get_redirect_uri(self) -> str:
+        redirect_uri = settings.AZURE_AUTH["REDIRECT_URI"]
+        if not isinstance(redirect_uri, str):
+            # Resolve the URI when it's a reverse_lazy callable
+            redirect_uri = str(redirect_uri)
+        if not redirect_uri.startswith("http"):
+            redirect_uri = self.request.build_absolute_uri(redirect_uri)
+        return redirect_uri
