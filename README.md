@@ -62,8 +62,8 @@ AZURE_AUTH = {
     "PUBLIC_URLS": ["<public:view_name>",],  # Optional, public views accessible by non-authenticated users
     "PUBLIC_PATHS": ['/go/',],  # Optional, public paths accessible by non-authenticated users
     "ROLES": {
-        "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1",
-        "3dc6539e-0589-4663-b782-fef100d839aa": "GroupName2"
+        "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1", # mapped to one Django group
+        "3dc6539e-0589-4663-b782-fef100d839aa": ["GroupName2", "GroupName3"] # mapped to multiple Django groups
     },  # Optional, will add user to django group if user is in EntraID group
     "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
     "GROUP_ATTRIBUTE": "roles",   # The AAD attribute or ID token claim you want to use as the value for the user's group memberships
