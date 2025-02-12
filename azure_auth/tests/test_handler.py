@@ -2,6 +2,7 @@ from collections import ChainMap
 
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
+from django.http import HttpResponse
 from django.test import RequestFactory, TestCase, override_settings
 from django.urls import reverse_lazy
 
@@ -11,7 +12,7 @@ from azure_auth.handlers import AuthHandler
 class TestAzureAuthHandler(TestCase):
     def setUp(self):
         self.request_factory = RequestFactory()
-        self.session_midleware = SessionMiddleware(lambda x: "")
+        self.session_middleware = SessionMiddleware(lambda x: HttpResponse())
 
     @override_settings(
         AZURE_AUTH=ChainMap(
@@ -46,5 +47,5 @@ class TestAzureAuthHandler(TestCase):
 
     def _build_auth_handler(self) -> AuthHandler:
         req = self.request_factory.get("/")
-        self.session_midleware.process_request(req)
+        self.session_middleware.process_request(req)
         return AuthHandler(req)
