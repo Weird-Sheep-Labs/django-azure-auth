@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2024-12-14
+
+### Added
+
+- Add ability to specify callback URL with `reverse_lazy`.
+
+### Fixed
+
+- Performance optimizations.
+
 ## [2.2.0] - 2024-12-14
 
 ### Changed
