@@ -144,5 +144,5 @@ AZURE_AUTH = {
     "EXTRA_FIELDS": [],
     "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn",
 }
-LOGIN_URL = "/azure_auth/login"
+LOGIN_URL = "/my/own/login/page/"
 LOGIN_REDIRECT_URL = "/"
