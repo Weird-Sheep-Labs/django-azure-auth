@@ -2,11 +2,22 @@ import functools
 from urllib.parse import urlparse
 
 from django.conf import settings
-from django.contrib.auth import BACKEND_SESSION_KEY
+from django.contrib.auth import BACKEND_SESSION_KEY, decorators
 from django.shortcuts import redirect
 from django.urls import reverse
 
 from .handlers import AuthHandler
+
+
+def _dummy_login_not_required(view_func):
+    return view_func
+
+
+# The login_not_required decorator was added in Django 5.1
+# For earlier version we use a dummy decorator
+login_not_required = getattr(
+    decorators, "login_not_required", _dummy_login_not_required
+)
 
 
 def azure_auth_required(func):
