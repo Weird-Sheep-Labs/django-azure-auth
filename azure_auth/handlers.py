@@ -50,6 +50,7 @@ class AuthHandler:
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=redirect_uri,
             state=state,
+            prompt=settings.AZURE_AUTH.get("PROMPT", None),
         )
         self.request.session[self.auth_flow_session_key] = flow
         return flow["auth_uri"]

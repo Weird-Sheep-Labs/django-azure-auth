@@ -50,7 +50,7 @@ from your Azure app:
 ```python
 AZURE_AUTH = {
     "CLIENT_ID": "<client id>",
-    "CLIENT_TYPE": "confidential", # leave unset for confidential or pick "confidential" or "public"
+    "CLIENT_TYPE": "confidential", # Optional, pick "public" or "confidential" (default)
     "CLIENT_SECRET": "<client secret>", # optional for public applications
     # REDIRECT_URI must be set to one of
     # - an absolute URI starting with "http" or "https", e. g. https://<domain>/azure_auth/callback
@@ -58,6 +58,7 @@ AZURE_AUTH = {
     # - a call to reverse_lazy, e. g. reverse_lazy("azure_auth:callback")
     "REDIRECT_URI": "https://<domain>/azure_auth/callback",
     "SCOPES": ["User.Read"],
+    "PROMPT": "select_account",  # Optional, one of "login", "consent", "select_account", "none" (default)
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
     "PUBLIC_URLS": ["<public:view_name>",],  # Optional, public views accessible by non-authenticated users
