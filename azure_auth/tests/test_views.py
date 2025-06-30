@@ -48,6 +48,7 @@ class TestLoginView(TestCase):
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
             state='{"next": null}',
+            prompt=None,
         )
 
     def test_login_redirect(self, mocked_msal_app):
@@ -72,6 +73,7 @@ class TestLoginView(TestCase):
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=settings.AZURE_AUTH["REDIRECT_URI"],
             state='{"next": "/dummy_next/"}',
+            prompt=None,
         )
 
 
