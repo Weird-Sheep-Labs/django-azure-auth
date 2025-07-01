@@ -50,8 +50,8 @@ from your Azure app:
 ```python
 AZURE_AUTH = {
     "CLIENT_ID": "<client id>",
-    "CLIENT_TYPE": "confidential", # Optional, pick "public" or "confidential" (default)
-    "CLIENT_SECRET": "<client secret>", # optional for public applications
+    "CLIENT_TYPE": "confidential_client", # Optional, pick "public_client" or "confidential_client" (default)
+    "CLIENT_SECRET": "<client secret>", # optional for public clients
     # REDIRECT_URI must be set to one of
     # - an absolute URI starting with "http" or "https", e. g. https://<domain>/azure_auth/callback
     # - a relative URI starting with "/", e. g. /azure_auth/callback

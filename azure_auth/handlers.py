@@ -186,7 +186,7 @@ class AuthHandler:
         secret = settings.AZURE_AUTH.get("CLIENT_SECRET", "<client_secret>")
         if secret == "<client_secret>":
             raise DjangoAzureAuthException(
-                "CLIENT_TYPE='confidential' also requires CLIENT_SECRET to be set in AZURE_AUTH"
+                "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
             )
         return msal.ConfidentialClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
@@ -205,10 +205,10 @@ class AuthHandler:
     @property
     def msal_app(self):
         if self._msal_app is None:
-            client_type = settings.AZURE_AUTH.get("CLIENT_TYPE", "confidential")
-            if client_type == "confidential":
+            client_type = settings.AZURE_AUTH.get("CLIENT_TYPE", "confidential_client")
+            if client_type == "confidential_client":
                 self._msal_app = self._get_confidential_client()
-            elif client_type == "public":
+            elif client_type == "public_client":
                 self._msal_app = self._get_public_client()
             else:
                 raise DjangoAzureAuthException(
