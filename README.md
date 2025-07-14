@@ -59,6 +59,7 @@ AZURE_AUTH = {
     "REDIRECT_URI": "https://<domain>/azure_auth/callback",
     "SCOPES": ["User.Read"],
     "PROMPT": "select_account",  # Optional, one of "login", "consent", "select_account", "none" (default)
+    #"ADDITIONAL_CLIENT_KWARGS": {"enable_broker_on_windows": True}, # Optional: additional KWARGS to give to public and confidential client
     "AUTHORITY": "https://login.microsoftonline.com/<tenant id>",   # Or https://login.microsoftonline.com/common if multi-tenant
     "LOGOUT_URI": "https://<domain>/logout",    # Optional
     "PUBLIC_URLS": ["<public:view_name>",],  # Optional, public views accessible by non-authenticated users

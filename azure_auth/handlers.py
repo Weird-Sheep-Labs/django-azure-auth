@@ -188,18 +188,22 @@ class AuthHandler:
             raise DjangoAzureAuthException(
                 "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
             )
+        additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
         return msal.ConfidentialClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
             client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
             authority=settings.AZURE_AUTH["AUTHORITY"],
             token_cache=self.cache,
+            **additional_kwargs,
         )
 
     def _get_public_client(self):
+        additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
         return msal.PublicClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
             authority=settings.AZURE_AUTH["AUTHORITY"],
             token_cache=self.cache,
+            **additional_kwargs,
         )
 
     @property
