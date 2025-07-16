@@ -50,6 +50,7 @@ class AuthHandler:
             scopes=settings.AZURE_AUTH["SCOPES"],
             redirect_uri=redirect_uri,
             state=state,
+            prompt=settings.AZURE_AUTH.get("PROMPT", None),
         )
         self.request.session[self.auth_flow_session_key] = flow
         return flow["auth_uri"]
@@ -181,15 +182,42 @@ class AuthHandler:
             and self.request.user.is_authenticated
         )
 
+    def _get_confidential_client(self):
+        secret = settings.AZURE_AUTH.get("CLIENT_SECRET", "<client_secret>")
+        if secret == "<client_secret>":
+            raise DjangoAzureAuthException(
+                "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
+            )
+        additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
+        return msal.ConfidentialClientApplication(
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
+            token_cache=self.cache,
+            **additional_kwargs,
+        )
+
+    def _get_public_client(self):
+        additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
+        return msal.PublicClientApplication(
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
+            token_cache=self.cache,
+            **additional_kwargs,
+        )
+
     @property
     def msal_app(self):
         if self._msal_app is None:
-            self._msal_app = msal.ConfidentialClientApplication(
-                client_id=settings.AZURE_AUTH["CLIENT_ID"],
-                client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
-                authority=settings.AZURE_AUTH["AUTHORITY"],
-                token_cache=self.cache,
-            )
+            client_type = settings.AZURE_AUTH.get("CLIENT_TYPE", "confidential_client")
+            if client_type == "confidential_client":
+                self._msal_app = self._get_confidential_client()
+            elif client_type == "public_client":
+                self._msal_app = self._get_public_client()
+            else:
+                raise DjangoAzureAuthException(
+                    f"Invalid CLIENT_TYPE '{client_type}' specified in AZURE_AUTH settings."
+                )
         return self._msal_app
 
     @property
