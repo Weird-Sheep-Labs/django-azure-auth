@@ -73,8 +73,9 @@ AZURE_AUTH = {
     "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
     "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn", # Optional, path to the function used to map the AAD to Django attributes
     "GRAPH_USER_ENDPOINT": "https://graph.microsoft.com/v1.0/me", # Optional, URL to the Graph endpoint that returns user info
+    "USE_LOGIN_URL": False, # When set to "True" use the configured LOGIN_URL as redirect target. (See "Compatibility with other Authentication Backends" below)
 }
-LOGIN_URL = "/azure_auth/login"
+LOGIN_URL = "/my/own/login/page/"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
 ```
 
@@ -214,6 +215,12 @@ will be removed from the Django group.
 ### Bypass logout account selection
 
 During logout, if the ID token includes only the default claims, Active Directory will present the user with a page prompting them to select the account to log out. To disable this, simply enable the `login_hint` optional claim in your client application in Azure, as described in https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc#send-a-sign-out-request.
+
+### Compatibility with other Authentication Backends
+
+When using multiple Authentication Backends you will need to provide your own login page where your user can select the authentication backend to
+use (e. g. local Django users). To redirect to your own login page set `USE_LOGIN_URL` to `True` and configure the URL in `LOGIN_URL` to point to
+your login page. The Django default is `/accounts/login/` (https://docs.djangoproject.com/en/5.1/ref/settings/#std-setting-LOGIN_URL).
 
 ## Credits
 
