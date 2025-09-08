@@ -157,3 +157,24 @@ class TestAzureAuthHandler(TestCase):
         handler = self._build_auth_handler()
         handler.sync_groups(self.user, self.token)
         self.assertEqual(self.user.groups.count(), 0)
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {
+                "ROLES": {
+                    "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": [
+                        "GroupName1",
+                        "GroupName2",
+                        "GroupName3",
+                    ],
+                    "cfa8556d-dd93-420c-abd2-477ba336d2d6": "GroupName1",
+                    "e236600b-7062-4bff-8ccf-12d8fbd80e5f": "GroupName1",
+                }
+            },
+            settings.AZURE_AUTH,
+        )
+    )
+    def test_multiple_roles_to_one_group(self):
+        handler = self._build_auth_handler()
+        handler.sync_groups(self.user, self.token)
+        self.assertEqual(self.user.groups.count(), 3)
