@@ -21,6 +21,8 @@ class AuthHandler:
     Class to interface with `msal` package and execute authentication process.
     """
 
+    GROUPS_UPDATED = False
+
     def __init__(self, request: HttpRequest):
         """
 
@@ -131,27 +133,48 @@ class AuthHandler:
     #   in AZURE_AUTH.GROUP_ATTRIBUTE
     def sync_groups(self, user, token):
         role_mappings = settings.AZURE_AUTH.get("ROLES")
+        if not role_mappings:
+            # No role mappings defined, nothing to do
+            return user
+        self.initialize_groups()
+
         groups_attr = settings.AZURE_AUTH.get("GROUP_ATTRIBUTE", "roles")
         azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, None)
-        if role_mappings:  # pragma: no branch
-            for role, group_names in role_mappings.items():
+
+        token_groups = set()
+        all_groups = set()
+        for role_id, name_or_names in role_mappings.items():
+            if not isinstance(name_or_names, list):
+                name_or_names = [str(name_or_names)]
+            all_groups.update(name_or_names)
+            if role_id in azure_token_roles:
+                token_groups.update(name_or_names)
+        current_groups = list(user.groups.values_list("name", flat=True))
+
+        if to_add := [item for item in token_groups if item not in current_groups]:
+            user.groups.add(*Group.objects.filter(name__in=to_add))
+
+        if to_remove := [
+            item
+            for item in current_groups
+            if item in all_groups and item not in token_groups
+        ]:
+            user.groups.remove(*Group.objects.filter(name__in=to_remove))
+        return user
+
+    def initialize_groups(self):
+        if not AuthHandler.GROUPS_UPDATED:
+            role_mappings: dict = settings.AZURE_AUTH.get("ROLES")
+            all_groups = set()
+            for group_names in role_mappings.values():
                 if not isinstance(group_names, list):
                     group_names = [group_names]
-                for group_name in group_names:
-                    if not group_name:
-                        continue  # Skip empty group names
-                    # all groups are created by default if they not exist
-                    django_group = Group.objects.get_or_create(name=group_name)[0]
-
-                    if azure_token_roles and role in azure_token_roles:
-                        # Add user with permissions to the corresponding django group
-                        user.groups.add(django_group)
-                    else:
-                        # No permission so check if user is in group and remove
-                        if user.groups.filter(name=group_name).exists():
-                            user.groups.remove(django_group)
-
-        return user
+                all_groups.update(group_names)
+            if all_groups:
+                for group_name in all_groups:
+                    if group_name:
+                        Group.objects.get_or_create(name=group_name)
+        AuthHandler.GROUPS_UPDATED = True
 
     def get_logout_uri(self) -> str:
         """
