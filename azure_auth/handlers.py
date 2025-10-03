@@ -92,6 +92,20 @@ class AuthHandler:
                 ]
             return token_result
 
+    def wam_login(self) -> Optional[dict]:
+        """
+        Initiates the WAM login flow and returns the token result.
+        """
+        result = self.msal_app.acquire_token_interactive(
+            scopes=settings.AZURE_AUTH["SCOPES"],
+            prompt=settings.AZURE_AUTH.get("PROMPT", None),
+            parent_window_handle=msal.PublicClientApplication.CONSOLE_WINDOW_HANDLE,
+        )
+        if "error" in result:
+            print(f"WAM login error: {result}")
+            result = None
+        return result
+
     def authenticate(self, token: dict) -> AbstractBaseUser:
         """
         Helper method to authenticate the user. Gets the Azure user from the

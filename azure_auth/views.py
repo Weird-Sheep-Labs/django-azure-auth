@@ -42,3 +42,23 @@ def azure_auth_callback(request: HttpRequest):
             return HttpResponseRedirect(next)
         return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
     return HttpResponseForbidden("Invalid email for this app.")
+
+
+def wam_auth_login(request: HttpRequest):
+    """
+    This view is used to handle Windows Authentication Manager (WAM) login.
+    """
+    # WAM flow is synchrous, so we get a token immediately
+    token = AuthHandler(request).wam_login()
+    if not token:
+        return HttpResponseForbidden("WAM login failed.")
+
+    user = authenticate(request, token=token)
+    if user:
+        login(request, user)
+
+        next = request.GET.get("next")
+        if next and url_has_allowed_host_and_scheme(next, allowed_hosts=None):
+            return HttpResponseRedirect(next)
+        return HttpResponseRedirect(settings.LOGIN_REDIRECT_URL)
+    return HttpResponseForbidden("Invalid email for this app.")
