@@ -48,7 +48,8 @@ def wam_auth_login(request: HttpRequest):
     """
     This view is used to handle Windows Authentication Manager (WAM) login.
     """
-    # WAM flow is synchrous, so we get a token immediately
+    # WAM flow is synchrous, so we get a token immediately.  Hence this function
+    # also includes the callback logic.
     token = AuthHandler(request).wam_login()
     if not token:
         return HttpResponseForbidden("WAM login failed.")
