@@ -1,8 +1,6 @@
 import json
 from typing import Any
 
-from django.conf import settings
-
 
 class EntraStateSerializer:
     def serialize(self, **kwargs):
@@ -34,9 +32,9 @@ def enable_broker_on_windows(azure_auth: dict[str, Any]) -> None:
     azure_auth["ADDITIONAL_CLIENT_KWARGS"] = additional_client_kwargs
 
 
-def is_broker_enabled() -> bool:
-    """Returns True if brokered authentication is enabled in the settings,
+def is_broker_enabled(azure_auth: dict[str, Any]) -> bool:
+    """Returns True if brokered authentication is enabled in the given settings,
     False otherwise."""
-    return settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {}).get(
+    return azure_auth.get("ADDITIONAL_CLIENT_KWARGS", {}).get(
         "enable_broker_on_windows", False
     )
