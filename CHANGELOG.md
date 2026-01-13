@@ -5,6 +5,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2026-01-13
+
+### Fixed
+
+- Fixed issue where multiple groups were not assigned correctly.
+
 ## [2.4.0] - 2025-09-07
 
 ### Added
