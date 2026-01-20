@@ -29,9 +29,7 @@ class AuthHandler:
         :param request: HttpRequest
         """
         self.request = request
-        self.graph_user_endpoint = settings.AZURE_AUTH.get(
-            "GRAPH_USER_ENDPOINT", "https://graph.microsoft.com/v1.0/me"
-        )
+        self.graph_user_endpoint = settings.AZURE_AUTH.get("GRAPH_USER_ENDPOINT", "https://graph.microsoft.com/v1.0/me")
         self.auth_flow_session_key = "auth_flow"
         self._cache = msal.SerializableTokenCache()
         self._msal_app = None
@@ -66,9 +64,7 @@ class AuthHandler:
         claims, depending on scopes used
         """
         flow = self.request.session.pop(self.auth_flow_session_key, {})
-        token_result = self.msal_app.acquire_token_by_auth_code_flow(
-            auth_code_flow=flow, auth_response=self.request.GET
-        )
+        token_result = self.msal_app.acquire_token_by_auth_code_flow(auth_code_flow=flow, auth_response=self.request.GET)
         if "error" in token_result:
             raise TokenError(token_result["error"], token_result["error_description"])
         self._save_cache()
@@ -79,17 +75,13 @@ class AuthHandler:
         accounts = self.msal_app.get_accounts()
         if accounts:  # pragma: no branch
             # Will return `None` if CCA cannot retrieve or generate new token
-            token_result = self.msal_app.acquire_token_silent(
-                scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0]
-            )
+            token_result = self.msal_app.acquire_token_silent(scopes=settings.AZURE_AUTH["SCOPES"], account=accounts[0])
             self._save_cache()
 
             # `acquire_token_silent` doesn't always return ID token/ID token claims
             # https://github.com/AzureAD/microsoft-authentication-library-for-python/issues/139
             if token_result and token_result.get("id_token_claims"):
-                self.request.session["id_token_claims"] = token_result[
-                    "id_token_claims"
-                ]
+                self.request.session["id_token_claims"] = token_result["id_token_claims"]
             return token_result
 
     def authenticate(self, token: dict) -> AbstractBaseUser:
@@ -100,11 +92,19 @@ class AuthHandler:
         :param token: MSAL auth token dictionary
         :return: Django user instance
         """
-        azure_user = self._get_azure_user(token["access_token"])
+        # Some enterprise Entra ID setups do not permit a User.Read scope for security reasons
+        # in this case we skip the user profile request and expect all required attributes to be
+        # available in the ID token claims
+        if "User.Read" in settings.AZURE_AUTH.get("SCOPES", []):
+            azure_user = self._get_azure_user(token["access_token"])
+        else:
+            azure_user = {}
 
         # Get extra fields
         extra_fields = {}
         if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):  # pragma: no branch
+            if "User.Read" not in settings.AZURE_AUTH.get("SCOPES", []):
+                raise DjangoAzureAuthException("EXTRA_FIELDS requires 'User.Read' scope to be set in AZURE_AUTH.SCOPES!")
             extra_fields = self._get_azure_user(token["access_token"], fields=fields)
 
         # Combine user profile attributes, extra attributes and ID token claims
@@ -154,11 +154,7 @@ class AuthHandler:
         if to_add := [item for item in token_groups if item not in current_groups]:
             user.groups.add(*Group.objects.filter(name__in=to_add))
 
-        if to_remove := [
-            item
-            for item in current_groups
-            if item in all_groups and item not in token_groups
-        ]:
+        if to_remove := [item for item in current_groups if item in all_groups and item not in token_groups]:
             user.groups.remove(*Group.objects.filter(name__in=to_remove))
         return user
 
@@ -200,17 +196,12 @@ class AuthHandler:
             return True
 
         # Otherwise try refresh the token
-        return (
-            self.get_token_from_cache() is not None
-            and self.request.user.is_authenticated
-        )
+        return self.get_token_from_cache() is not None and self.request.user.is_authenticated
 
     def _get_confidential_client(self):
         secret = settings.AZURE_AUTH.get("CLIENT_SECRET", "<client_secret>")
         if secret == "<client_secret>":
-            raise DjangoAzureAuthException(
-                "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
-            )
+            raise DjangoAzureAuthException("CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH")
         additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
         return msal.ConfidentialClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
@@ -238,9 +229,7 @@ class AuthHandler:
             elif client_type == "public_client":
                 self._msal_app = self._get_public_client()
             else:
-                raise DjangoAzureAuthException(
-                    f"Invalid CLIENT_TYPE '{client_type}' specified in AZURE_AUTH settings."
-                )
+                raise DjangoAzureAuthException(f"Invalid CLIENT_TYPE '{client_type}' specified in AZURE_AUTH settings.")
         return self._msal_app
 
     @property
@@ -269,9 +258,7 @@ class AuthHandler:
             raise DjangoAzureAuthException("An unknown error occurred.")
 
     def _map_attributes_to_user(self, **fields) -> dict:
-        if user_mapping_fn := settings.AZURE_AUTH.get(
-            "USER_MAPPING_FN"
-        ):  # pragma: no branch
+        if user_mapping_fn := settings.AZURE_AUTH.get("USER_MAPPING_FN"):  # pragma: no branch
             path, fn = user_mapping_fn.rsplit(".", 1)
             mod = importlib.import_module(path)
             return getattr(mod, fn)(**fields)
