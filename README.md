@@ -68,6 +68,10 @@ AZURE_AUTH = {
         "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": "GroupName1", # mapped to one Django group
         "3dc6539e-0589-4663-b782-fef100d839aa": ["GroupName2", "GroupName3"] # mapped to multiple Django groups
     },  # Optional, will add user to django group if user is in EntraID group
+    "ROLE_TO_FLAG_MAPPING": {
+        "my_cool_role_1": [ "is_staff", ], # gives users having this role access to the django admin GUI
+        "my_admin_role": ["is_superuser", "is_staff"], # makes users having this role superusers
+    }, # Optional, will set user model flags based on roles
     "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
     "GROUP_ATTRIBUTE": "roles",   # The AAD attribute or ID token claim you want to use as the value for the user's group memberships
     "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
