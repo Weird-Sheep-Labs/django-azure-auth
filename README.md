@@ -57,6 +57,10 @@ AZURE_AUTH = {
     # - a relative URI starting with "/", e. g. /azure_auth/callback
     # - a call to reverse_lazy, e. g. reverse_lazy("azure_auth:callback")
     "REDIRECT_URI": "https://<domain>/azure_auth/callback",
+    # Some enterprise Entra ID setups do not permit a User.Read scope for security reasons
+    # in this case set the SCOPES to an empty list (we will the skip reading the User s profile) 
+    # and make sure your ID token contains the required claims for mapping them to 
+    # the django user fields
     "SCOPES": ["User.Read"],
     "PROMPT": "select_account",  # Optional, one of "login", "consent", "select_account", "none" (default)
     #"ADDITIONAL_CLIENT_KWARGS": {"enable_broker_on_windows": True}, # Optional: additional KWARGS to give to public and confidential client
