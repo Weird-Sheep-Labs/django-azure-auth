@@ -139,7 +139,7 @@ class AuthHandler:
         self.initialize_groups()
 
         groups_attr = settings.AZURE_AUTH.get("GROUP_ATTRIBUTE", "roles")
-        azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, None)
+        azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, [])
 
         token_groups = set()
         all_groups = set()
