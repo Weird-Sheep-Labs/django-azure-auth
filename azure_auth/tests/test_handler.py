@@ -29,13 +29,21 @@ class TestAzureAuthHandler(TestCase):
         redirect_uri = handler._get_redirect_uri()
         self.assertEqual(redirect_uri, "http://testserver/azure_auth/callback_absolut")
 
-    @override_settings(AZURE_AUTH=ChainMap({"REDIRECT_URI": "/azure_auth/callback_relative"}, settings.AZURE_AUTH))
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {"REDIRECT_URI": "/azure_auth/callback_relative"}, settings.AZURE_AUTH
+        )
+    )
     def test_callback_uri_relative(self):
         handler = self._build_auth_handler()
         redirect_uri = handler._get_redirect_uri()
         self.assertEqual(redirect_uri, "http://testserver/azure_auth/callback_relative")
 
-    @override_settings(AZURE_AUTH=ChainMap({"REDIRECT_URI": reverse_lazy("decorator_protected")}, settings.AZURE_AUTH))
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {"REDIRECT_URI": reverse_lazy("decorator_protected")}, settings.AZURE_AUTH
+        )
+    )
     def test_callback_uri_reverse_lazy(self):
         handler = self._build_auth_handler()
         redirect_uri = handler._get_redirect_uri()
@@ -176,7 +184,10 @@ class TestAzureAuthHandler(TestCase):
         AZURE_AUTH=ChainMap(
             {
                 "ROLE_TO_FLAG_MAPPING": {
-                    "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": ["is_staff", "is_superuser"],
+                    "95170e67-2bbf-4e3e-a4d7-e7e5829fe7a7": [
+                        "is_staff",
+                        "is_superuser",
+                    ],
                 }
             },
             settings.AZURE_AUTH,
