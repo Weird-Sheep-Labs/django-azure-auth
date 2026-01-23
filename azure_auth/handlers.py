@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import logging
 from http import HTTPStatus
 from typing import Optional, cast
 from urllib import parse
@@ -123,7 +124,8 @@ class AuthHandler:
                 **self._map_attributes_to_user(**attributes),
             )
 
-        user = self.sync_groups(user, token)
+        user, azure_token_roles = self.sync_groups(user, token)
+        user = self.sync_user_flags(user, token, azure_token_roles)
 
         return user
 
@@ -131,7 +133,7 @@ class AuthHandler:
     # A role mapping in the AZURE_AUTH settings is expected.
     # The attribute of the token to use for group membership can be specified
     #   in AZURE_AUTH.GROUP_ATTRIBUTE
-    def sync_groups(self, user, token):
+    def sync_groups(self, user, token) -> (AbstractBaseUser, dict):
         role_mappings = settings.AZURE_AUTH.get("ROLES")
         if not role_mappings:
             # No role mappings defined, nothing to do
@@ -139,7 +141,7 @@ class AuthHandler:
         self.initialize_groups()
 
         groups_attr = settings.AZURE_AUTH.get("GROUP_ATTRIBUTE", "roles")
-        azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, None)
+        azure_token_roles = token.get("id_token_claims", {}).get(groups_attr, [])
 
         token_groups = set()
         all_groups = set()
@@ -160,7 +162,7 @@ class AuthHandler:
             if item in all_groups and item not in token_groups
         ]:
             user.groups.remove(*Group.objects.filter(name__in=to_remove))
-        return user
+        return user, azure_token_roles
 
     def initialize_groups(self):
         if not AuthHandler.GROUPS_UPDATED:
@@ -175,6 +177,46 @@ class AuthHandler:
                     if group_name:
                         Group.objects.get_or_create(name=group_name)
         AuthHandler.GROUPS_UPDATED = True
+
+    def sync_user_flags(
+        self, user: AbstractBaseUser, token: dict, azure_token_roles: dict
+    ) -> AbstractBaseUser:
+        """
+        Syncs user flags such as is_staff and is_superuser based on token claims.
+
+        :param user: Django user instance
+        :param token: MSAL auth token dictionary
+        :param azure_token_roles: azure token roles extracted from the token in sync_groups()
+        :return: Updated Django user instance
+        """
+        logger = logging.getLogger("django-azure-auth.handlers")
+
+        # the role to flag mapping allows setting is_superuser and is_staff based on roles
+        for role_to_map in settings.AZURE_AUTH.get("ROLE_TO_FLAG_MAPPING", {}).keys():
+            if role_to_map in azure_token_roles:
+                logger.info(f'Role "{role_to_map}" found for user "{user}"...')
+                for flag_name in ["is_superuser", "is_staff"]:
+                    if hasattr(user, flag_name):
+                        if flag_name in settings.AZURE_AUTH.get(
+                            "ROLE_TO_FLAG_MAPPING", {}
+                        ).get(role_to_map, []):
+                            logger.info(
+                                f'Setting user "{user}" flag "{flag_name}" to true based on role "{role_to_map}"...'
+                            )
+                            setattr(user, flag_name, True)
+                            user.save()
+                        else:
+                            logger.debug(
+                                f'No mapping for flag "{flag_name}" for role "{role_to_map}"...'
+                            )
+                            setattr(user, flag_name, False)
+                            user.save()
+                    else:
+                        logger.warning(
+                            f'User model does not have a flag "{flag_name}" to set for role "{role_to_map}"!'
+                        )
+
+        return user
 
     def get_logout_uri(self) -> str:
         """
