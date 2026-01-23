@@ -100,11 +100,21 @@ class AuthHandler:
         :param token: MSAL auth token dictionary
         :return: Django user instance
         """
-        azure_user = self._get_azure_user(token["access_token"])
+        # Some enterprise Entra ID setups do not permit a User.Read scope for security reasons
+        # in this case we skip the user profile request and expect all required attributes to be
+        # available in the ID token claims
+        if "User.Read" in settings.AZURE_AUTH.get("SCOPES", []):
+            azure_user = self._get_azure_user(token["access_token"])
+        else:
+            azure_user = {}
 
         # Get extra fields
         extra_fields = {}
         if fields := settings.AZURE_AUTH.get("EXTRA_FIELDS"):  # pragma: no branch
+            if "User.Read" not in settings.AZURE_AUTH.get("SCOPES", []):
+                raise DjangoAzureAuthException(
+                    "EXTRA_FIELDS requires 'User.Read' scope to be set in AZURE_AUTH.SCOPES!"
+                )
             extra_fields = self._get_azure_user(token["access_token"], fields=fields)
 
         # Combine user profile attributes, extra attributes and ID token claims

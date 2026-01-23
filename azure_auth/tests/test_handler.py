@@ -178,3 +178,70 @@ class TestAzureAuthHandler(TestCase):
         handler = self._build_auth_handler()
         handler.sync_groups(self.user, self.token)
         self.assertEqual(self.user.groups.count(), 3)
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {"SCOPES": ["User.Read"], "USERNAME_ATTRIBUTE": "mail"}, settings.AZURE_AUTH
+        )
+    )
+    def test_authenticate_with_user_read_scope(self):
+        from unittest.mock import patch, MagicMock
+
+        handler = self._build_auth_handler()
+        dummy_user = MagicMock()
+        dummy_token = {
+            "access_token": "dummy",
+            "id_token_claims": {"mail": "blah", "roles": []},
+        }
+        with (
+            patch.object(
+                handler, "_get_azure_user", return_value={"username": "testuser"}
+            ),
+            patch.object(handler, "_update_user", return_value=None),
+            patch.object(
+                handler,
+                "_map_attributes_to_user",
+                return_value={"username": "testuser"},
+            ),
+            patch.object(handler, "sync_groups", return_value=dummy_user),
+        ):
+            # Patch UserModel._default_manager.get_by_natural_key to return dummy_user
+            with patch(
+                "azure_auth.handlers.UserModel._default_manager.get_by_natural_key",
+                return_value=dummy_user,
+            ):
+                result = handler.authenticate(dummy_token)
+        self.assertEqual(result, dummy_user)
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {"SCOPES": [], "USERNAME_ATTRIBUTE": "mail"}, settings.AZURE_AUTH
+        )
+    )
+    def test_authenticate_without_user_read_scope(self):
+        from unittest.mock import patch, MagicMock
+
+        handler = self._build_auth_handler()
+        dummy_user = MagicMock()
+        dummy_token = {
+            "access_token": "dummy",
+            "id_token_claims": {"mail": "blah", "roles": []},
+        }
+        with (
+            patch.object(handler, "_get_azure_user") as mock_get_azure_user,
+            patch.object(handler, "_update_user", return_value=None),
+            patch.object(
+                handler,
+                "_map_attributes_to_user",
+                return_value={"username": "testuser"},
+            ),
+            patch.object(handler, "sync_groups", return_value=dummy_user),
+        ):
+            # Patch UserModel._default_manager.get_by_natural_key to return dummy_user
+            with patch(
+                "azure_auth.handlers.UserModel._default_manager.get_by_natural_key",
+                return_value=dummy_user,
+            ):
+                result = handler.authenticate(dummy_token)
+        self.assertEqual(result, dummy_user)
+        mock_get_azure_user.assert_not_called()
