@@ -9,11 +9,3 @@ repos:
     hooks:
       - id: poetry-check
       - id: poetry-lock
-  - repo: https://github.com/Weird-Sheep-Labs/coverage-pre-commit
-    rev: 0.1.0
-    hooks:
-      - id: coverage-xml
-        stages: ["pre-push"]
-      - id: coverage-badge
-        stages: ["pre-push"]
-        additional_dependencies: ["setuptools"]

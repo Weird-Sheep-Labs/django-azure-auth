@@ -132,4 +132,3 @@ dmypy.json
 .idea/
 
 .vscode/
-!reports/coverage/coverage.xml
