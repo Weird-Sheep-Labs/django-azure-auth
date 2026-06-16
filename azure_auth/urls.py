@@ -11,7 +11,9 @@ from azure_auth.utils import is_broker_enabled
 
 app_name = "azure_auth"
 
-_login_function = azure_auth_login if not is_broker_enabled(settings.AZURE_AUTH) else wam_auth_login
+_login_function = (
+    azure_auth_login if not is_broker_enabled(settings.AZURE_AUTH) else wam_auth_login
+)
 urlpatterns = [
     path("login", _login_function, name="login"),
     path("logout", azure_auth_logout, name="logout"),
