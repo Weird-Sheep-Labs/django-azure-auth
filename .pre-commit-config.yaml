@@ -16,3 +16,4 @@ repos:
         stages: ["pre-push"]
       - id: coverage-badge
         stages: ["pre-push"]
+        additional_dependencies: ["setuptools"]
