@@ -7,11 +7,13 @@ from django.utils.http import url_has_allowed_host_and_scheme
 
 from azure_auth.utils import EntraStateSerializer
 
+from .decorators import login_not_required
 from .handlers import AuthHandler
 
 serializer = EntraStateSerializer()
 
 
+@login_not_required
 def azure_auth_login(request: HttpRequest):
     return HttpResponseRedirect(
         AuthHandler(request).get_auth_uri(
@@ -20,6 +22,7 @@ def azure_auth_login(request: HttpRequest):
     )
 
 
+@login_not_required
 def azure_auth_logout(request: HttpRequest):
     # Auth handler has to be initialized before `logout()` to load the claims from the session
     auth_handler = AuthHandler(request)
@@ -28,6 +31,7 @@ def azure_auth_logout(request: HttpRequest):
     return HttpResponseRedirect(auth_handler.get_logout_uri())
 
 
+@login_not_required
 def azure_auth_callback(request: HttpRequest):
     token = AuthHandler(request).get_token_from_flow()
     user = authenticate(request, token=token)
