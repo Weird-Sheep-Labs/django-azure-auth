@@ -29,6 +29,7 @@ class AuthHandler:
         :param request: HttpRequest
         """
         self.request = request
+        self.proxies = settings.AZURE_AUTH.get("PROXIES", None)
         self.graph_user_endpoint = settings.AZURE_AUTH.get(
             "GRAPH_USER_ENDPOINT", "https://graph.microsoft.com/v1.0/me"
         )
@@ -231,6 +232,7 @@ class AuthHandler:
             client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
             authority=settings.AZURE_AUTH["AUTHORITY"],
             token_cache=self.cache,
+            proxies=self.proxies,
             **additional_kwargs,
         )
 
@@ -240,6 +242,7 @@ class AuthHandler:
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
             authority=settings.AZURE_AUTH["AUTHORITY"],
             token_cache=self.cache,
+            proxies=self.proxies,
             **additional_kwargs,
         )
 
@@ -272,6 +275,7 @@ class AuthHandler:
         resp = requests.get(
             self.graph_user_endpoint,
             headers={"Authorization": f"Bearer {token}"},
+            proxies=self.proxies,
             params=params,
         )
         if resp.ok:
