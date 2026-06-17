@@ -1,0 +1,11 @@
+plugins:
+  - "@semantic-release/commit-analyzer"
+  - "@semantic-release/release-notes-generator"
+  - "@semantic-release/changelog"
+  - - "@semantic-release/exec"
+    - prepareCmd: >-
+        uvx --from=toml-cli toml set --toml-path=pyproject.toml
+        project.version ${nextRelease.version}
+      publishCmd: "uv build && uv publish"
+branches:
+  - main

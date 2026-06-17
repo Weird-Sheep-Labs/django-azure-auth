@@ -6,7 +6,7 @@ from .handlers import AuthHandler
 class AzureBackend(ModelBackend):
     def authenticate(self, request, token=None, *args, **kwargs):
         if not token:  # pragma: no cover
-            return
+            return None
         user = AuthHandler(request).authenticate(token)
 
         # Return only if `is_active`

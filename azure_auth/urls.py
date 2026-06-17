@@ -1,13 +1,13 @@
-from django.urls import path
 from django.conf import settings
+from django.urls import path
 
+from azure_auth.utils import is_broker_enabled
 from azure_auth.views import (
     azure_auth_callback,
     azure_auth_login,
     azure_auth_logout,
     wam_auth_login,
 )
-from azure_auth.utils import is_broker_enabled
 
 app_name = "azure_auth"
 

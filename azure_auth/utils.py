@@ -22,7 +22,6 @@ def enable_broker_on_windows(azure_auth: dict[str, Any]) -> None:
         Using MSAL Python with Web Account Manager
         https://learn.microsoft.com/en-us/entra/msal/python/advanced/wam
     """
-
     # WAM only makes sense for public clients.  The Azure Portal also needs to have
     # the correct redirect URL configured:
     #   ms-appx-web://microsoft.aad.brokerplugin/YOUR_CLIENT_ID
@@ -34,7 +33,8 @@ def enable_broker_on_windows(azure_auth: dict[str, Any]) -> None:
 
 def is_broker_enabled(azure_auth: dict[str, Any]) -> bool:
     """Returns True if brokered authentication is enabled in the given settings,
-    False otherwise."""
+    False otherwise.
+    """
     return azure_auth.get("ADDITIONAL_CLIENT_KWARGS", {}).get(
         "enable_broker_on_windows", False
     )

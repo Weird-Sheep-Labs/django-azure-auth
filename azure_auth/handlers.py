@@ -1,7 +1,7 @@
 import datetime
 import importlib
 from http import HTTPStatus
-from typing import Optional, cast
+from typing import cast
 from urllib import parse
 
 import msal
@@ -39,7 +39,7 @@ class AuthHandler:
         # Eagerly load the claims from the session
         self.claims = self.request.session.get("id_token_claims", {})
 
-    def get_auth_uri(self, state: Optional[str] = None) -> str:
+    def get_auth_uri(self, state: str | None = None) -> str:
         """
         Requests the auth flow dictionary and stores it on the session to be
         queried later in the auth process.
@@ -92,7 +92,7 @@ class AuthHandler:
                 ]
             return token_result
 
-    def wam_login(self) -> Optional[dict]:
+    def wam_login(self) -> dict | None:
         """
         Initiates the WAM login flow and returns the token result.
         """
@@ -127,19 +127,17 @@ class AuthHandler:
         attributes = {**azure_user, **extra_fields, **token.get("id_token_claims", {})}
         natural_key = attributes[settings.AZURE_AUTH["USERNAME_ATTRIBUTE"]]
         try:
-            user = UserModel._default_manager.get_by_natural_key(natural_key)  # type: ignore
+            user = UserModel._default_manager.get_by_natural_key(natural_key)
 
             # Sync Django user with AAD attributes
             self._update_user(user, **attributes)
         except UserModel.DoesNotExist:
-            user = UserModel._default_manager.create_user(  # type: ignore
-                **{UserModel.USERNAME_FIELD: natural_key},  # type: ignore
+            user = UserModel._default_manager.create_user(
+                **{UserModel.USERNAME_FIELD: natural_key},
                 **self._map_attributes_to_user(**attributes),
             )
 
-        user = self.sync_groups(user, token)
-
-        return user
+        return self.sync_groups(user, token)
 
     # Syncing azure token claim roles with django user groups
     # A role mapping in the AZURE_AUTH settings is expected.
@@ -267,7 +265,7 @@ class AuthHandler:
         if self.cache.has_state_changed:
             self.request.session["token_cache"] = self.cache.serialize()
 
-    def _get_azure_user(self, token: str, fields: Optional[dict] = None):
+    def _get_azure_user(self, token: str, fields: dict | None = None):
         params = {"$select": ",".join(fields)} if fields else None
         resp = requests.get(
             self.graph_user_endpoint,
@@ -276,11 +274,10 @@ class AuthHandler:
         )
         if resp.ok:
             return resp.json()
-        elif resp.status_code == HTTPStatus.UNAUTHORIZED:
+        if resp.status_code == HTTPStatus.UNAUTHORIZED:
             error = resp.json()["error"]
             raise TokenError(message=error["code"], description=error["message"])
-        else:  # pragma: no cover
-            raise DjangoAzureAuthException("An unknown error occurred.")
+        raise DjangoAzureAuthException("An unknown error occurred.")  # pragma: no cover
 
     def _map_attributes_to_user(self, **fields) -> dict:
         if user_mapping_fn := settings.AZURE_AUTH.get(

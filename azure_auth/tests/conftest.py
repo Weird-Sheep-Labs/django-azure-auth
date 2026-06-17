@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 from django.contrib.auth import get_user_model
 from mixer.backend.django import mixer
+
 from azure_auth.handlers import AuthHandler
 
 UserModel = get_user_model()
