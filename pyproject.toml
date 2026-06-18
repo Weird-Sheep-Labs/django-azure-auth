@@ -1,60 +1,118 @@
-[tool.poetry]
+[build-system]
+build-backend = "uv_build"
+requires = [ "uv-build>=0.11.7,<0.12.0" ]
+
+[project]
 name = "django-azure-auth"
 version = "2.6.0"
 description = "A simple Django app for user authentication with Azure Active Directory/Entra ID."
-authors = ["Weird Sheep Labs <info@weirdsheeplabs.com>"]
-license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/Weird-Sheep-Labs/django-azure-auth"
-keywords = ['django', 'azure', 'authentication', 'microsoft', 'entra']
+keywords = [ "authentication", "azure", "django", "entra", "microsoft" ]
+license = { text = "MIT" }
+authors = [
+  { name = "Weird Sheep Labs", email = "info@weirdsheeplabs.com" },
+]
+requires-python = ">=3.10"
 classifiers = [
-    "Framework :: Django",
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Information Technology",
+  "Development Status :: 5 - Production/Stable",
+  "Framework :: Django",
+  "Intended Audience :: Information Technology",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
-packages = [
-    { include = "azure_auth"},
+dependencies = [
+  "django>=3.2",
+  "msal>=1.18.0",
+]
+urls.Homepage = "https://github.com/Weird-Sheep-Labs/django-azure-auth"
+
+[dependency-groups]
+dev = [
+  "mixer>=7.2.2",
+  "pre-commit>=4.5.1",
+  "pytest>=8.0",
+  "pytest-cov>=5.0",
+  "pytest-django>=4.5.2",
+  "ruff>=0.15.12",
+  "ty>=0.0.30",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-msal = "^1.18.0"
-Django = ">=3.2"
+[tool.uv]
+exclude-newer = "P7D"
+build-backend.module-name = "azure_auth"
+build-backend.module-root = ""
 
-[tool.poetry.group.dev.dependencies]
-pytest = "^7.1.2"
-pytest-cov = "^3.0.0"
-coverage = {extras = ["toml"], version = "^6.4.1"}
-pytest-django = "^4.5.2"
-mixer = "^7.2.2"
-pre-commit = "~3"
+[tool.ruff]
+extend-exclude = [ "uv.lock" ]
+lint.extend-select = [
+  "B",
+  "C4",
+  "D",
+  "FLY",
+  "I",
+  "ICN",
+  "N",
+  "NPY",
+  "PERF",
+  "PTH",
+  "RET",
+  "RUF",
+  "SIM",
+  "UP",
+]
+lint.ignore = [
+  "D100",
+  "D101",
+  "D102",
+  "D103",
+  "D104",
+  "D105",
+  "D107",
+  "D200",
+  "D205",
+  "D212",
+  "N802",
+  "N803",
+  "N806",
+  "N818",
+  "RET503",
+]
+lint.per-file-ignores."__init__.py" = [ "F401", "F403" ]
+lint.per-file-ignores."azure_auth/tests/**" = [ "D100", "D101", "D102", "D103" ]
+lint.pydocstyle.convention = "google"
 
-[tool.pytest.ini_options]
-addopts = "--cov . -v --cov-report=html"
-DJANGO_SETTINGS_MODULE = "azure_auth.tests.settings"
-python_files = ["tests.py", "test_*.py",  "*_tests.py"]
+[tool.pyproject-fmt]
+keep_full_version = true
 
-[tool.coverage.run]
-include = ["azure_auth/*"]
-omit = [
-    "*/tests/*",
-    "*/tests*",
-    "*/migrations/*",
-    "*__init__*",
-    ]
-branch = true
+[tool.ty]
+rules.possibly-missing-attribute = "ignore"
+rules.unresolved-attribute = "ignore"
+src.exclude = [
+  "**/site-packages",
+  "**/.venv",
+  "**/.ruff_cache",
+  "**/.pytest_cache",
+  "**/htmlcov",
+  "**/node_modules",
+  "**/__pycache__",
+  "**/.*",
+  "azure_auth/tests/**",
+]
 
-[tool.coverage.report]
-exclude_lines = ["pragma: no cover"]
-show_missing = true
-include = ["azure_auth/*"]
-omit = [
-    "*/tests/*",
-    "*/tests*",
-    "*/migrations/*",
-    "*__init__*",
-    ]
+[tool.pytest]
+ini_options.addopts = "--cov . -v --cov-report=html"
+ini_options.DJANGO_SETTINGS_MODULE = "azure_auth.tests.settings"
+ini_options.python_files = [ "tests.py", "test_*.py", "*_tests.py" ]
 
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.coverage]
+run.branch = true
+run.include = [ "azure_auth/*" ]
+run.omit = [ "*/migrations/*", "*/tests*", "*/tests/*", "*__init__*" ]
+report.exclude_lines = [ "pragma: no cover" ]
+report.include = [ "azure_auth/*" ]
+report.omit = [ "*/migrations/*", "*/tests*", "*/tests/*", "*__init__*" ]
+report.show_missing = true

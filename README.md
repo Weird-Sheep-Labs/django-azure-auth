@@ -1,4 +1,4 @@
-![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/ci.yml/badge.svg)
+![Build](https://github.com/Weird-Sheep-Labs/django-azure-auth/actions/workflows/test.yaml/badge.svg)
 [![PyPI downloads](https://img.shields.io/pypi/dm/django-azure-auth.svg)](https://pypistats.org/packages/django-azure-auth)
 [![PyPI Downloads](https://static.pepy.tech/badge/django-azure-auth)](https://pepy.tech/projects/django-azure-auth)
 
@@ -24,6 +24,19 @@ to protect individual views, and middleware which allows the entire site to requ
 authentication by default, with the ability to exempt specified views.
 
 This project is in no way affiliated with Microsoft.
+
+## Development
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
+```bash
+uv sync --all-groups
+uv run pytest
+uv run pre-commit run -a
+uv run ty check
+```
+
+Commit messages must follow [Conventional Commits](https://www.conventionalcommits.org/) (enforced by pre-commit).
 
 ## Installation
 

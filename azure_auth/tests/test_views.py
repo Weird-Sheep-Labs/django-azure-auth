@@ -102,7 +102,7 @@ class TestCallbackView(TransactionTestCase):
             def __init__(self, status_code, data):
                 self.status_code = status_code
                 self.data = data
-                self.ok = True if self.status_code == 200 else False
+                self.ok = self.status_code == 200
 
             def json(self):
                 return self.data
@@ -325,13 +325,11 @@ class TestLogoutView(TestCase):
     def test_logout_with_query_params(self):
         # Check user has been correctly logged in
         assert all(
-            [
-                key in self.client.session
-                for key in [
-                    "_auth_user_id",
-                    "_auth_user_backend",
-                    "_auth_user_hash",
-                ]
+            key in self.client.session
+            for key in [
+                "_auth_user_id",
+                "_auth_user_backend",
+                "_auth_user_hash",
             ]
         )
         resp = self.client.get(reverse("azure_auth:logout"))
@@ -346,10 +344,8 @@ class TestLogoutView(TestCase):
     def test_logout_without_query_params(self):
         # Check user has been correctly logged in
         assert all(
-            [
-                key in self.client.session
-                for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
-            ]
+            key in self.client.session
+            for key in ["_auth_user_id", "_auth_user_backend", "_auth_user_hash"]
         )
         resp = self.client.get(reverse("azure_auth:logout"))
         assert resp.status_code == HTTPStatus.FOUND

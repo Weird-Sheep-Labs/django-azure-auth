@@ -1,0 +1,11 @@
+plugins:
+  - "@semantic-release/commit-analyzer"
+  - - "@semantic-release/exec"
+    - prepareCmd: >-
+        uvx --from=toml-cli toml set --toml-path=pyproject.toml
+        project.version $(echo '${nextRelease.version}' | sed 's/-alpha\./a/' | sed 's/-beta\./b/' | sed 's/-rc\./rc/')
+      publishCmd: "uv build && uv publish"
+branches:
+  - prerelease
+  - name: main
+    prerelease: alpha
