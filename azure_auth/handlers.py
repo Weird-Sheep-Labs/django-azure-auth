@@ -168,6 +168,9 @@ class AuthHandler:
         if to_add := [item for item in token_groups if item not in current_groups]:
             user.groups.add(*Group.objects.filter(name__in=to_add))
 
+        if user.is_staff and settings.AZURE_AUTH.get("KEEP_STAFF", False)
+            return user
+
         if to_remove := [
             item
             for item in current_groups
