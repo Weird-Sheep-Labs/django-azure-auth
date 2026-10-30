@@ -51,6 +51,11 @@ AZURE_AUTH = {
     "CLIENT_ID": "<client id>",
     "CLIENT_TYPE": "confidential_client", # Optional, pick "public_client" or "confidential_client" (default)
     "CLIENT_SECRET": "<client secret>", # optional for public clients
+    "CLIENT_CREDENTIAL_TYPE": "secret", # Optional for confidential clients: "secret" (default) or "certificate"
+    # For certificate credentials, set CLIENT_CREDENTIAL_TYPE to "certificate" and configure:
+    # "PRIVATE_KEY": "<private key PEM contents>",
+    # "PUBLIC_CERTIFICATE": "<public certificate PEM contents>",
+    # "PEM_KEY_PASSPHRASE": "<private key passphrase>", # Optional
     # REDIRECT_URI must be set to one of
     # - an absolute URI starting with "http" or "https", e. g. https://<domain>/azure_auth/callback
     # - a relative URI starting with "/", e. g. /azure_auth/callback
@@ -78,6 +83,12 @@ LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
 ```
 
 #### Note: You should obfuscate the credentials by using environment variables.
+
+For certificate credentials, pass PEM contents rather than file paths. For example,
+set `"PRIVATE_KEY": os.environ["AZURE_AUTH_PRIVATE_KEY"]` after importing `os` in your
+Django settings. Preserve the PEM headers, footers, and actual newline characters.
+Both `PRIVATE_KEY` and `PUBLIC_CERTIFICATE` are required for certificate credentials;
+`PEM_KEY_PASSPHRASE` is optional.
 
 ### Username field
 

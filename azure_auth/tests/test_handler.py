@@ -1,12 +1,16 @@
 from collections import ChainMap
+from unittest.mock import patch
 
 import pytest
 from django.conf import settings
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.http import HttpResponse
-from django.test import RequestFactory, TestCase, override_settings
+from django.test import RequestFactory
+from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse_lazy
 
+from azure_auth.exceptions import DjangoAzureAuthException
 from azure_auth.handlers import AuthHandler
 
 
@@ -178,3 +182,79 @@ class TestAzureAuthHandler(TestCase):
         handler = self._build_auth_handler()
         handler.sync_groups(self.user, self.token)
         self.assertEqual(self.user.groups.count(), 3)
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {
+                "CLIENT_CREDENTIAL_TYPE": "certificate",
+                "PRIVATE_KEY": (
+                        "-----BEGIN PRIVATE KEY-----\n"
+                        "FAKE/KEY+BAQEFAASCBKcwggSjAgEAAoIBAQDL7+6Z1g5r8V3y\n"
+                        "-----END PRIVATE KEY-----"
+                ),
+                "PUBLIC_CERTIFICATE": (
+                        "-----BEGIN CERTIFICATE-----\n"
+                        "FAKE/CERT+Z1g5r8V3yMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+                        "-----END CERTIFICATE-----"
+                ),
+            },
+            settings.AZURE_AUTH,
+        )
+    )
+    @patch("azure_auth.handlers.msal.ConfidentialClientApplication")
+    def test_msal_app_from_certificate(self, mocked_client):
+        handler = self._build_auth_handler()
+        msal_app = handler.msal_app
+
+        mocked_client.assert_called_once_with(
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential={
+                "private_key": settings.AZURE_AUTH["PRIVATE_KEY"],
+                "public_certificate": settings.AZURE_AUTH["PUBLIC_CERTIFICATE"],
+            },
+            authority=settings.AZURE_AUTH["AUTHORITY"],
+            token_cache=handler.cache,
+        )
+        self.assertIs(msal_app, mocked_client.return_value)
+
+        # A second access should reuse the same client.
+        self.assertIs(handler.msal_app, msal_app)
+        mocked_client.assert_called_once()
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {
+                "CLIENT_SECRET": "My-Fake-Test-Secret",
+            },
+            settings.AZURE_AUTH,
+        )
+    )
+    @patch("azure_auth.handlers.msal.ConfidentialClientApplication")
+    def test_msal_app_from_secret(self, mocked_client):
+        handler = self._build_auth_handler()
+        msal_app = handler.msal_app
+
+        mocked_client.assert_called_once_with(
+            client_id=settings.AZURE_AUTH["CLIENT_ID"],
+            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            authority=settings.AZURE_AUTH["AUTHORITY"],
+            token_cache=handler.cache,
+        )
+        self.assertIs(msal_app, mocked_client.return_value)
+
+        # A second access should reuse the same client.
+        self.assertIs(handler.msal_app, msal_app)
+        mocked_client.assert_called_once()
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {
+                "PRIVATE_KEY": "bla bla bla, invalid PEM"
+            },
+            settings.AZURE_AUTH,
+        )
+    )
+    def test_private_key_invalid(self):
+        handler = self._build_auth_handler()
+        with self.assertRaises(DjangoAzureAuthException):
+            handler._get_private_key()
