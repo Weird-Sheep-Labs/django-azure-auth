@@ -188,14 +188,14 @@ class TestAzureAuthHandler(TestCase):
             {
                 "CLIENT_CREDENTIAL_TYPE": "certificate",
                 "PRIVATE_KEY": (
-                        "-----BEGIN PRIVATE KEY-----\n"
-                        "FAKE/KEY+BAQEFAASCBKcwggSjAgEAAoIBAQDL7+6Z1g5r8V3y\n"
-                        "-----END PRIVATE KEY-----"
+                    "-----BEGIN PRIVATE KEY-----\n"
+                    "FAKE/KEY+BAQEFAASCBKcwggSjAgEAAoIBAQDL7+6Z1g5r8V3y\n"
+                    "-----END PRIVATE KEY-----"
                 ),
                 "PUBLIC_CERTIFICATE": (
-                        "-----BEGIN CERTIFICATE-----\n"
-                        "FAKE/CERT+Z1g5r8V3yMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
-                        "-----END CERTIFICATE-----"
+                    "-----BEGIN CERTIFICATE-----\n"
+                    "FAKE/CERT+Z1g5r8V3yMA0GCSqGSIb3DQEBCwUAMEUxCzAJBgNV\n"
+                    "-----END CERTIFICATE-----"
                 ),
             },
             settings.AZURE_AUTH,
@@ -248,9 +248,7 @@ class TestAzureAuthHandler(TestCase):
 
     @override_settings(
         AZURE_AUTH=ChainMap(
-            {
-                "PRIVATE_KEY": "bla bla bla, invalid PEM"
-            },
+            {"PRIVATE_KEY": "bla bla bla, invalid PEM"},
             settings.AZURE_AUTH,
         )
     )
