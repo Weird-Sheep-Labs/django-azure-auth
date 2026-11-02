@@ -18,7 +18,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-msal = "^1.18.0"
+msal = "^1.35.0"
 Django = ">=3.2"
 
 [tool.poetry.group.dev.dependencies]

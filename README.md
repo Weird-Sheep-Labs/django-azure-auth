@@ -51,6 +51,11 @@ AZURE_AUTH = {
     "CLIENT_ID": "<client id>",
     "CLIENT_TYPE": "confidential_client", # Optional, pick "public_client" or "confidential_client" (default)
     "CLIENT_SECRET": "<client secret>", # optional for public clients
+    "CLIENT_CREDENTIAL_TYPE": "secret", # Optional for confidential clients: "secret" (default) or "certificate"
+    # For certificate credentials, set CLIENT_CREDENTIAL_TYPE to "certificate" and configure:
+    # "PRIVATE_KEY": "<private key PEM contents>",
+    # "PUBLIC_CERTIFICATE": "<public certificate PEM contents>",
+    # "PEM_KEY_PASSPHRASE": "<private key passphrase>", # Optional
     # REDIRECT_URI must be set to one of
     # - an absolute URI starting with "http" or "https", e. g. https://<domain>/azure_auth/callback
     # - a relative URI starting with "/", e. g. /azure_auth/callback
@@ -77,7 +82,44 @@ LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint
 ```
 
-#### Note: You should obfuscate the credentials by using environment variables.
+#### Note: You should keep credentials out of source control by using environment variables.
+
+For certificate credentials, pass PEM contents rather than file paths. Both `PRIVATE_KEY`
+and `PUBLIC_CERTIFICATE` are required; `PEM_KEY_PASSPHRASE` is optional. You can provide
+the PEM contents directly, preserving the headers, footers, and newline characters, or
+Base64-encode the contents to simplify transporting them through environment variables.
+
+#### Example: Base64-encoded certificate credentials
+
+Base64 is only an encoding, not encryption. Store these values in a secrets manager or
+deployment environment, and do not commit real credentials to source control. The values
+below are placeholders, not usable credentials.
+
+For example, the environment variables could be set as follows:
+
+```text
+AZURE_AUTH_CLIENT_ID=<client-id>
+AZURE_AUTH_PRIVATE_KEY=<base64-encoded-private-key-PEM>
+AZURE_AUTH_PUBLIC_CERTIFICATE=<base64-encoded-public-certificate-PEM>
+```
+
+Then decode them in `settings.py`:
+
+```python
+from base64 import b64decode
+from os import environ
+
+AZURE_AUTH = {
+    "CLIENT_ID": environ["AZURE_AUTH_CLIENT_ID"],
+    # ...
+    "CLIENT_CREDENTIAL_TYPE": "certificate",
+    "PRIVATE_KEY": b64decode(environ["AZURE_AUTH_PRIVATE_KEY"]).decode("utf-8"),
+    "PUBLIC_CERTIFICATE": b64decode(
+        environ["AZURE_AUTH_PUBLIC_CERTIFICATE"]
+    ).decode("utf-8"),
+    # "PEM_KEY_PASSPHRASE": environ["AZURE_AUTH_PEM_KEY_PASSPHRASE"],  # If needed
+}
+```
 
 ### Username field
 

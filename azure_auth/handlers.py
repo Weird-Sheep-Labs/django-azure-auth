@@ -219,22 +219,83 @@ class AuthHandler:
             and self.request.user.is_authenticated
         )
 
-    def _get_confidential_client(self):
-        secret = settings.AZURE_AUTH.get("CLIENT_SECRET", "<client_secret>")
-        if secret == "<client_secret>":
+    def _get_confidential_client(self) -> msal.ConfidentialClientApplication:
+        credential_type = settings.AZURE_AUTH.get("CLIENT_CREDENTIAL_TYPE", "secret")
+        if credential_type == "secret":
+            secret = settings.AZURE_AUTH.get("CLIENT_SECRET", "<client_secret>")
+            if secret == "<client_secret>":
+                raise DjangoAzureAuthException(
+                    "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
+                )
+            client_credential = secret
+        elif credential_type == "certificate":
+            client_credential = self._get_certificate_credential()
+        else:
             raise DjangoAzureAuthException(
-                "CLIENT_TYPE='confidential_client' also requires CLIENT_SECRET to be set in AZURE_AUTH"
+                f"Invalid CLIENT_CREDENTIAL_TYPE '{credential_type}' specified in AZURE_AUTH settings."
             )
+
         additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
         return msal.ConfidentialClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
-            client_credential=settings.AZURE_AUTH["CLIENT_SECRET"],
+            client_credential=client_credential,
             authority=settings.AZURE_AUTH["AUTHORITY"],
             token_cache=self.cache,
             **additional_kwargs,
         )
 
-    def _get_public_client(self):
+    def _get_certificate_credential(self) -> dict[str, str]:
+        """
+        Build PEM credentials without a thumbprint so MSAL calculates SHA-256.
+
+        https://msal-python.readthedocs.io/en/latest/#msal.ClientApplication.params.client_credential
+        """
+        client_credential = {
+            "private_key": self._get_private_key(),
+            "public_certificate": self._get_public_certificate(),
+        }
+        if (passphrase := settings.AZURE_AUTH.get("PEM_KEY_PASSPHRASE")) is not None:
+            client_credential["passphrase"] = passphrase
+        return client_credential
+
+    @staticmethod
+    def _get_private_key() -> str:
+        private_key = settings.AZURE_AUTH.get("PRIVATE_KEY")
+        if isinstance(private_key, str):
+            private_key = private_key.strip()
+            for label in ("PRIVATE KEY", "RSA PRIVATE KEY", "ENCRYPTED PRIVATE KEY"):
+                begin = f"-----BEGIN {label}-----"
+                end = f"-----END {label}-----"
+                if (
+                    private_key.startswith((begin + "\n", begin + "\r\n"))
+                    and private_key.endswith("\n" + end)
+                    and private_key[len(begin) : -len(end)].strip()
+                ):
+                    return private_key
+        raise DjangoAzureAuthException(
+            "AZURE_AUTH['PRIVATE_KEY'] must contain a PEM private key "
+            "with matching BEGIN and END markers."
+        )
+
+    @staticmethod
+    def _get_public_certificate() -> str:
+        public_certificate = settings.AZURE_AUTH.get("PUBLIC_CERTIFICATE")
+        if isinstance(public_certificate, str):
+            public_certificate = public_certificate.strip()
+            begin = "-----BEGIN CERTIFICATE-----"
+            end = "-----END CERTIFICATE-----"
+            if (
+                public_certificate.startswith((begin + "\n", begin + "\r\n"))
+                and public_certificate.endswith("\n" + end)
+                and public_certificate[len(begin) : -len(end)].strip()
+            ):
+                return public_certificate
+        raise DjangoAzureAuthException(
+            "AZURE_AUTH['PUBLIC_CERTIFICATE'] must contain a PEM certificate "
+            "with matching BEGIN and END markers."
+        )
+
+    def _get_public_client(self) -> msal.PublicClientApplication:
         additional_kwargs = settings.AZURE_AUTH.get("ADDITIONAL_CLIENT_KWARGS", {})
         return msal.PublicClientApplication(
             client_id=settings.AZURE_AUTH["CLIENT_ID"],
