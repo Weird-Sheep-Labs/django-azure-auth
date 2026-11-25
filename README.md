@@ -69,9 +69,9 @@ AZURE_AUTH = {
     },  # Optional, will add user to django group if user is in EntraID group
     "USERNAME_ATTRIBUTE": "mail",   # The AAD attribute or ID token claim you want to use as the value for the user model `USERNAME_FIELD`
     "GROUP_ATTRIBUTE": "roles",   # The AAD attribute or ID token claim you want to use as the value for the user's group memberships
-    "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function
+    "EXTRA_FIELDS": [], # Optional, extra AAD user profile attributes you want to make available in the user mapping function, this will only work as long as GRAPH_USER_ENDPOINT is not None
     "USER_MAPPING_FN": "azure_auth.tests.misc.user_mapping_fn", # Optional, path to the function used to map the AAD to Django attributes
-    "GRAPH_USER_ENDPOINT": "https://graph.microsoft.com/v1.0/me", # Optional, URL to the Graph endpoint that returns user info
+    "GRAPH_USER_ENDPOINT": "https://graph.microsoft.com/v1.0/me", # Optional, URL to the Graph endpoint that returns user info, set to None to skip the request and rely on the ID token claims only
 }
 LOGIN_URL = "/azure_auth/login"
 LOGIN_REDIRECT_URL = "/"    # Or any other endpoint

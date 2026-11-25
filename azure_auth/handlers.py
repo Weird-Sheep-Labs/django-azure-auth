@@ -268,6 +268,9 @@ class AuthHandler:
             self.request.session["token_cache"] = self.cache.serialize()
 
     def _get_azure_user(self, token: str, fields: Optional[dict] = None):
+        if self.graph_user_endpoint is None:
+            # Graph lookup is disabled, the claims carry the user data instead
+            return {}
         params = {"$select": ",".join(fields)} if fields else None
         resp = requests.get(
             self.graph_user_endpoint,
