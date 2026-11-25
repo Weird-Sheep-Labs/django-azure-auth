@@ -1,4 +1,5 @@
 from collections import ChainMap
+from unittest.mock import patch
 
 import pytest
 from django.conf import settings
@@ -178,3 +179,16 @@ class TestAzureAuthHandler(TestCase):
         handler = self._build_auth_handler()
         handler.sync_groups(self.user, self.token)
         self.assertEqual(self.user.groups.count(), 3)
+
+    @override_settings(
+        AZURE_AUTH=ChainMap(
+            {"GRAPH_USER_ENDPOINT": None},
+            settings.AZURE_AUTH,
+        )
+    )
+    def test_get_azure_user_with_no_graph_endpoint(self):
+        handler = self._build_auth_handler()
+        with patch("azure_auth.handlers.requests.get") as mock_get:
+            result = handler._get_azure_user(self.token["access_token"])
+        mock_get.assert_not_called()
+        self.assertEqual(result, {})
